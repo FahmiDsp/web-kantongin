@@ -73,9 +73,9 @@ Pastikan Anda telah menginstal **Node.js** di komputer Anda.
 Untuk menguji coba Dashboard Super Admin, buka halaman Login Kasir dan gunakan kredensial bawaan berikut:
 
 - **Username:** `admin`
-- **Password:** `password`
+- **Password:** `Fahmi12345#`
 
-> **Catatan Penting:** Karena aplikasi ini sekarang menggunakan MongoDB, akun admin otomatis dibuat saat server pertama kali menyala. Sebelum menjalankan server, buka file `api/index.js` dan temukan kode `email: 'admin@kantongin.com'`, lalu ubah menjadi email asli Anda. (Atau Anda bisa mengubahnya langsung dari data *collection* di website MongoDB Atlas).
+> **Catatan Penting:** Karena aplikasi ini sekarang menggunakan MongoDB, akun admin otomatis dibuat saat server pertama kali menyala. Sebelum menjalankan server, buka file `api/index.js` dan temukan kode `email: 'fahmidwisaputro2006@gmail.com'`, lalu ubah menjadi email asli Anda. (Atau Anda bisa mengubahnya langsung dari data *collection* di website MongoDB Atlas).
 
 ---
 
