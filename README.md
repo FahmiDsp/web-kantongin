@@ -45,24 +45,24 @@ Pastikan Anda telah menginstal **Node.js** di komputer Anda.
 
 ### 2. Persiapan Backend (Server)
 1. Buka terminal atau Command Prompt (di VS Code).
-2. Arahkan direktori terminal ke folder aplikasi (tempat file `server.js` berada).
+2. Arahkan direktori terminal ke folder aplikasi (tempat file `package.json` berada di *root*).
 3. Instal semua paket dan *dependency* yang dibutuhkan dengan perintah berikut:
    ```bash
-   npm install express cors jsonwebtoken nodemailer mongodb
+   npm install
    ```
-4. **Konfigurasi Backend:** Buka file `server.js` dan ubah beberapa hal berikut:
+4. **Konfigurasi Backend:** Buka file `api/index.js` dan ubah beberapa hal berikut:
    - Masukkan *Connection String* (URL) dari **MongoDB Atlas** Anda ke variabel `MONGODB_URI`.
    - Masukkan alamat email Gmail dan **Sandi Aplikasi (App Password)** Anda di bagian konfigurasi `nodemailer`.
-5. Jalankan server dengan perintah:
+5. Jalankan server secara lokal dengan perintah:
    ```bash
-   node server.js
+   node api/index.js
    ```
 6. Jika berhasil, akan muncul tulisan `✅ Backend berjalan di http://localhost:3000`. Biarkan terminal ini **tetap terbuka**.
 
 ### 3. Menjalankan Frontend (Layar Pengguna)
 1. Buka folder proyek menggunakan **Visual Studio Code (VS Code)**.
 2. Pastikan Anda telah memasang ekstensi **Live Server**.
-3. Buka file `kantongin/index.html` (Halaman Pemasaran/Landing Page) atau `buatkan-saya-website-kasir-untuk-toko/index.html` (Aplikasi Kasir).
+3. Buka file `index.html` yang berada di *root directory* (untuk Halaman Pemasaran/Landing Page) atau `kasir/index.html` (untuk Aplikasi Kasir).
 4. Klik tulisan **"Go Live"** di pojok kanan bawah VS Code (atau klik Kanan -> *Open with Live Server*).
 5. Aplikasi secara otomatis akan terbuka di *browser* Anda dan siap digunakan!
 
@@ -75,7 +75,7 @@ Untuk menguji coba Dashboard Super Admin, buka halaman Login Kasir dan gunakan k
 - **Username:** `admin`
 - **Password:** `password`
 
-> **Catatan Penting:** Karena aplikasi ini sekarang menggunakan MongoDB, akun admin otomatis dibuat saat server pertama kali menyala. Sebelum menjalankan server, buka file `server.js` dan temukan kode `email: 'admin@kantongin.com'`, lalu ubah menjadi email asli Anda. (Atau Anda bisa mengubahnya langsung dari data *collection* di website MongoDB Atlas).
+> **Catatan Penting:** Karena aplikasi ini sekarang menggunakan MongoDB, akun admin otomatis dibuat saat server pertama kali menyala. Sebelum menjalankan server, buka file `api/index.js` dan temukan kode `email: 'admin@kantongin.com'`, lalu ubah menjadi email asli Anda. (Atau Anda bisa mengubahnya langsung dari data *collection* di website MongoDB Atlas).
 
 ---
 
@@ -89,8 +89,4 @@ Proyek ini sudah dikonfigurasi secara khusus agar *Backend* maupun *Frontend*-ny
 
 **Fahmi Dwisaputro** © 2026
 
-<<<<<<< HEAD
 Proyek ini dibuat dengan ❤️ menggunakan kombinasi HTML, CSS, JavaScript Murni, dan Node.js.
-=======
-Proyek ini dibuat dengan ❤️ menggunakan kombinasi HTML, CSS, JavaScript Murni, dan Node.js.
->>>>>>> 9c73171ef94784129562b785fc37964b6419ce54
