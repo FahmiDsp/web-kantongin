@@ -22,7 +22,7 @@ app.use(async (req, res, next) => {
       db = client.db('kantongin_db');
       const adminExists = await db.collection('users').findOne({ username: 'admin' });
       if (!adminExists) {
-        await db.collection('users').insertOne({ id: 'admin1', username: 'admin', password: 'password', role: 'admin', name: 'Super Admin', email: 'admin@kantongin.com' });
+        await db.collection('users').insertOne({ id: 'admin1', username: 'admin', password: 'password', role: 'admin', name: 'Super Admin', email: 'fahmidwisaputro2006@gmail.com' });
       }
     } catch (err) {
       console.error("Gagal menyambung ke MongoDB:", err);
