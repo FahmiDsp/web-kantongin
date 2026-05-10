@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kantongin</title>
+  <meta name="description" content="Kantongin adalah aplikasi Kasir Niaga Toko Klontong dan Lainnya untuk mempermudah manajemen transaksi dan stok usaha Anda.">
+  <link rel="icon" href="assets/images/logo.png" type="image/png">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .loading-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    .loading-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+    .loading-logo {
+      width: 80px;
+      height: 80px;
+      animation: pulse-logo 1.5s infinite ease-in-out;
+      margin-bottom: 24px;
+    }
+    @keyframes pulse-logo {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.15); opacity: 0.7; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .loader-dots {
+      display: flex;
+      gap: 8px;
+    }
+    .loader-dots span {
+      width: 12px;
+      height: 12px;
+      background-color: #FB923C;
+      border-radius: 50%;
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+    .loader-dots span:nth-child(1) { animation-delay: -0.32s; }
+    .loader-dots span:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== LOADING SCREEN ===== -->
+  <div id="loading-screen" class="loading-screen">
+    <img src="assets/images/logo.png" alt="Kantongin Loading" class="loading-logo">
+    <div class="loader-dots">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar" id="navbar">
+    <div class="container">
+      <a href="#" class="navbar__logo">
+        <img src="assets/images/logo.png" alt="Kantongin Logo">
+        Kantongin
+      </a>
+      <div class="nav-links" id="navLinks">
+        <a href="#fitur">Fitur</a>
+        <a href="#tentang">Tentang</a>
+        <a href="../buatkan-saya-website-kasir-untuk-toko/index.html" class="btn btn--primary">Login Kasir</a>
+      </div>
+      <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero" id="hero">
+    <div class="container">
+      <div class="hero__content">
+        <h1>Kelola Toko Jadi Lebih <span class="highlight">Mudah</span> & Efisien</h1>
+        <p class="hero__desc"><strong>Kantongin</strong> (<strong>Kasir Niaga Toko Klontong dan Lainnya</strong>) adalah solusi kasir digital all-in-one untuk mencatat transaksi jualan, mengelola stok barang, dan memantau keuntungan secara real-time.</p>
+        <div class="hero__actions">
+          <a href="../buatkan-saya-website-kasir-untuk-toko/index.html?mode=register" class="btn btn--primary btn--large">Daftar Gratis</a>
+          <a href="#fitur" class="btn btn--outline btn--large">Pelajari Fitur</a>
+        </div>
+      </div>
+      <div class="hero__image">
+        <div class="animated-illustration">
+          <div class="circle circle-1"></div>
+          <div class="circle circle-2"></div>
+          <div class="mockup-window">
+            <div class="mockup-header">
+              <span></span><span></span><span></span>
+            </div>
+            <div class="mockup-body">
+              <div class="mockup-line short"></div>
+              <div class="mockup-line long"></div>
+              <div class="mockup-line medium"></div>
+              <div class="mockup-chart">
+                <div class="bar bar-1"></div>
+                <div class="bar bar-2"></div>
+                <div class="bar bar-3"></div>
+                <div class="bar bar-4"></div>
+              </div>
+            </div>
+          </div>
+          <div class="float-card float-card--1">
+            <div class="icon-circle green">✓</div>
+            <div class="info">
+              <strong>Rp 150.000</strong>
+              <span>Transaksi Berhasil</span>
+            </div>
+          </div>
+          <div class="float-card float-card--2">
+            <div class="icon-circle blue">📦</div>
+            <div class="info">
+              <strong>Stok Aman</strong>
+              <span>Otomatis Update</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FITUR ===== -->
+  <section class="section section--gray" id="fitur">
+    <div class="container">
+      <div class="section__header reveal">
+        <span class="section__tag">Fitur Unggulan</span>
+        <h2 class="section__title">Semua yang Kamu Butuhkan dalam Satu Aplikasi</h2>
+        <p class="section__subtitle">Dari kasir, manajemen stok, hingga laporan keuangan — semuanya terintegrasi sempurna.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card reveal">
+          <div class="feature-card__icon">
+            <img src="assets/images/feature-pos.png" alt="Kasir POS">
+          </div>
+          <h3>Kasir Digital Cepat</h3>
+          <p>Proses transaksi dalam hitungan detik dengan antarmuka yang intuitif. Dukung pembayaran tunai dan QRIS.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-card__icon">
+            <img src="assets/images/feature-inventory.png" alt="Manajemen Stok">
+          </div>
+          <h3>Manajemen Stok Otomatis</h3>
+          <p>Stok terupdate otomatis setiap transaksi. Dapatkan notifikasi saat stok menipis agar tak pernah kehabisan barang.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-card__icon">
+            <img src="assets/images/feature-report.png" alt="Laporan">
+          </div>
+          <h3>Laporan Real-Time</h3>
+          <p>Pantau omzet harian, mingguan, dan bulanan, sampai tahunan. dan keuntungan bersih secara instan.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-card__icon">🧾</div>
+          <h3>Struk Digital & Cetak</h3>
+          <p>Kirim struk via WhatsApp atau cetak langsung dengan printer thermal. Hemat kertas, lebih profesional.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TENTANG ===== -->
+  <section class="section" id="tentang">
+    <div class="container">
+      <div class="about-grid">
+        <div class="about__image reveal">
+          <div class="about__image-main">
+            <div class="about-animation">
+              <div class="shape shape-1"></div>
+              <div class="shape shape-2"></div>
+              <div class="pos-machine">
+                <div class="pos-screen"></div>
+                <div class="pos-body">
+                  <div class="pos-slot"></div>
+                  <div class="receipt">
+                    <div class="receipt-line"></div>
+                    <div class="receipt-line"></div>
+                    <div class="receipt-line short"></div>
+                  </div>
+                  <div class="pos-buttons">
+                    <span></span><span></span><span></span>
+                  </div>
+                </div>
+              </div>
+              <div class="floating-coin coin-1">🪙</div>
+              <div class="floating-coin coin-2">💸</div>
+            </div>
+          </div>
+        </div>
+        <div class="about__content reveal">
+          <span class="section__tag">Tentang Kami</span>
+          <h2 class="section__title">Kasir Niaga Toko Klontong & Lainnya</h2>
+          <p><strong>Kantongin</strong> merupakan singkatan dari <strong>Kasir Niaga Toko Klontong dan Lainnya</strong>. Aplikasi ini dirancang khusus sebagai solusi digital untuk membantu pemilik warung, toko kelontong, dan berbagai UMKM. Kami mengubah cara lama pencatatan manual menjadi sistem kasir modern yang praktis, mempercepat transaksi, dan meminimalisir kesalahan hitung.</p>
+          <ul class="about__list">
+            <li><span class="check">✓</span> Integrasi yang mudah</li>
+            <li><span class="check">✓</span> Akses 24/7 dari mana saja</li>
+            <li><span class="check">✓</span> Gratis</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid" style="grid-template-columns: 1fr 1fr;">
+        <div class="footer__brand">
+          <a href="#" class="navbar__logo" style="color: #fff; margin-bottom: 16px;">
+            <img src="assets/images/logo.png" alt="Kantongin Logo">
+            Kantongin
+          </a>
+          <p>Membantu Anda mencapai kebebasan finansial melalui alat pencatatan yang mudah dan intuitif.</p>
+        </div>
+        <div>
+          <h4>Dibuat Dengan</h4>
+          <div class="tech-stack" style="display: flex; gap: 16px; flex-wrap: wrap;">
+            <div class="tech-icon" title="HTML5">
+              <svg viewBox="-4 -4 136 136" width="40" height="40"><path fill="#E44D26" d="M19.037 113.876L9.032 1.661h109.936l-10.016 112.198-45.019 12.48z"/><path fill="#F16529" d="M64 116.8l36.378-10.086 8.559-95.878H64z"/><path fill="#EBEBEB" d="M64 52.455H45.788L44.53 38.361H64V24.599H29.489l.33 3.692 3.382 37.927H64zm0 35.743l-.061.017-15.327-4.14-.979-10.975H33.816l1.928 21.609 28.193 7.826.063-.017z"/><path fill="#fff" d="M63.952 52.455v13.763h16.947l-1.597 17.849-15.35 4.143v14.319l28.215-7.82.207-2.325 3.234-36.233.335-3.696h-3.708zm0-27.856v13.762h33.244l.276-3.092.628-6.978.329-3.692z"/></svg>
+            </div>
+            <div class="tech-icon" title="CSS3">
+              <svg viewBox="-4 -4 136 136" width="40" height="40"><path fill="#1572B6" d="M18.814 114.123L8.76 1.352h110.48l-10.064 112.754-45.243 12.543z"/><path fill="#33A9DC" d="M64.001 117.062l36.559-10.136 8.601-96.354h-45.16z"/><path fill="#EBEBEB" d="M64.001 51.429H45.296l-1.302-14.585H64.001V23.435H27.538l.343 3.837 3.525 39.52H64.001zm0 35.559l-.061.017-15.751-4.254-.993-11.265H33.816l1.959 21.96 28.159 7.816.067-.02z"/><path fill="#fff" d="M63.962 51.429v13.409h17.211l-1.623 18.146-15.588 4.207v13.869l28.634-7.94.21-2.352 3.285-36.774.34-3.803h-3.708zm0-27.994v13.409H95.82l.277-3.13.637-7.086.337-3.193z"/></svg>
+            </div>
+            <div class="tech-icon" title="JavaScript">
+              <svg viewBox="-4 -4 136 136" width="40" height="40"><path fill="#F0DB4F" d="M1.408 1.408h125.184v125.184H1.408z"/><path fill="#323330" d="M116.347 96.736c-.917-5.711-4.641-10.508-15.672-14.981-3.832-1.761-8.104-3.022-9.377-5.926-.452-1.69-.512-2.642-.226-3.665.821-3.32 4.784-4.355 7.925-3.403 2.023.678 3.938 2.237 5.093 4.724 5.402-3.498 5.391-3.475 9.163-5.879-1.381-2.141-2.118-3.129-3.022-4.045-3.249-3.629-7.676-5.498-14.756-5.355l-3.688.477c-3.534.893-6.902 2.748-8.877 5.235-5.926 6.724-4.236 18.492 2.975 23.335 7.104 5.332 17.54 6.545 18.873 11.531 1.297 6.104-4.486 8.08-10.234 7.378-4.236-.881-6.592-3.034-9.139-6.949-4.688 2.713-4.688 2.713-9.508 5.485 1.143 2.499 2.344 3.63 4.26 5.795 9.068 9.198 31.76 8.746 35.83-5.176.165-.478 1.261-3.666.38-8.581zM69.21 58.943l-.024 31.06c0 4.106.034 7.919-.237 11.432-.655 3.386-1.895 5.427-5.142 6.934l.018-.012c-2.831 1.386-7.508 1.109-9.963-.456l-.018.012c-.297-.188-.571-.381-.833-.582l-.018.012c-.605-.451-1.113-.988-1.539-1.569l-.018.012c-.119-.165-.206-.327-.299-.489l.018-.012c-.142-.27-.277-.543-.375-.803l9.448-5.593c1.17 2.158 2.215 3.297 4.688 3.297 2.427 0 4.028-1.254 4.028-5.052V37.035h12.279v21.907z"/></svg>
+            </div>
+            <div class="tech-icon" title="Tailwind CSS">
+              <svg viewBox="-4 -4 136 136" width="40" height="40"><path fill="#38B2AC" d="M64 25.6c-17.1 0-27.7 8.5-32 25.6 6.4-8.5 13.9-10.7 22.4-6.4 4.5 2.3 7.7 6 11.5 10.6 6.5 8.1 14.5 18.1 30.1 18.1 17.1 0 27.7-8.5 32-25.6-6.4 8.5-13.9 10.7-22.4 6.4-4.5-2.3-7.7-6-11.5-10.6C87.6 35.6 79.6 25.6 64 25.6zM32 76.8c-17.1 0-27.7 8.5-32 25.6 6.4-8.5 13.9-10.7 22.4-6.4 4.5 2.3 7.7 6 11.5 10.6 6.5 8.1 14.5 18.1 30.1 18.1 17.1 0 27.7-8.5 32-25.6-6.4 8.5-13.9 10.7-22.4 6.4-4.5-2.3-7.7-6-11.5-10.6C55.6 86.8 47.6 76.8 32 76.8z"/></svg>
+            </div>
+            <div class="tech-icon" title="Node.js">
+              <svg viewBox="-4 -4 136 136" width="40" height="40"><path fill="#3E863D" d="M106.828 32.551L66.702 9.385c-1.684-.972-3.719-.972-5.402 0L21.171 32.551c-1.684.972-2.719 2.766-2.719 4.708v46.331c0 1.942 1.035 3.736 2.719 4.708l40.129 23.165c1.684.972 3.719.972 5.402 0l40.126-23.165c1.684-.972 2.719-2.766 2.719-4.708V37.259c0-1.942-1.035-3.736-2.719-4.708z"/><path fill="#333333" d="M96.069 49.336c-.461-.266-.991-.321-1.488-.152l-23.454 8.006v-34.12c0-.528-.282-1-.734-1.261l-5.659-3.267c-.451-.261-1.017-.261-1.468 0l-5.659 3.267c-.452.261-.734.733-.734 1.261v37.669l-20.916-12.076c-.455-.262-1.026-.255-1.474.02l-4.912 3.011c-.446.273-.715.753-.707 1.275.009.521.294.993.748 1.254l27.147 15.674c.451.261 1.017.261 1.468 0l27.351-15.791c.461-.266.732-.76.711-1.291-.02-.531-.329-1.006-.807-1.246l-4.414-2.233zM64.673 89.544l21.144 12.207c.451.261 1.017.261 1.468 0l4.902-2.83c.452-.261.734-.733.734-1.261V60.297c0-.537-.294-1.021-.762-1.253l-4.485-2.222c-.477-.236-1.037-.174-1.461.16l-20.806 16.425v-8.776l22.617-17.854c.414-.326.605-.85.495-1.353-.11-.502-.53-.883-1.042-.947l-4.887-.604c-.521-.064-1.043.161-1.344.577l-15.839 21.849V34.568c0-.528-.282-1-.734-1.261l-5.659-3.267c-.451-.261-1.017-.261-1.468 0l-5.659 3.267c-.452.261-.734.733-.734 1.261v54.976z"/></svg>
+            </div>
+            <div class="tech-icon" title="Express.js">
+              <svg viewBox="0 0 128 128" width="40" height="40"><circle cx="64" cy="64" r="60" fill="#333333"/><text x="64" y="76" font-family="sans-serif" font-size="40" font-weight="bold" fill="#fff" text-anchor="middle">ex</text></svg>
+            </div>
+            <div class="tech-icon" title="Nodemailer">
+              <svg viewBox="0 0 128 128" width="40" height="40"><rect x="16" y="28" width="96" height="72" rx="8" fill="#10B981"/><path fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" d="M16 40l48 32 48-32"/></svg>
+            </div>
+            <div class="tech-icon" title="JSON Web Token (JWT)">
+              <svg viewBox="0 0 128 128" width="40" height="40"><rect x="16" y="28" width="96" height="72" rx="12" fill="#DB2777"/><text x="64" y="76" font-family="sans-serif" font-size="28" font-weight="bold" fill="#fff" text-anchor="middle">JWT</text></svg>
+            </div>
+            <div class="tech-icon" title="CORS">
+              <svg viewBox="0 0 128 128" width="40" height="40"><circle cx="64" cy="64" r="60" fill="#6366F1"/><path fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" d="M36 64h56M72 44l20 20-20 20M56 44L36 64l20 20"/></svg>
+            </div>
+            <div class="tech-icon" title="MongoDB">
+              <svg viewBox="0 0 128 128" width="40" height="40"><path fill="#47A248" d="M64,5.4C64,5.4,41.5,21.8,41.5,56.1C41.5,88.4,62.4,113,64,122.6C65.6,113,86.5,88.4,86.5,56.1C86.5,21.8,64,5.4,64,5.4z"/><path fill="#3F9142" d="M64,5.4v117.2C65.6,113,86.5,88.4,86.5,56.1C86.5,21.8,64,5.4,64,5.4z"/></svg>
+            </div>
+            <div class="tech-icon" title="Vercel">
+              <svg viewBox="0 0 128 128" width="40" height="40"><path fill="#000000" d="M64 16L112 100H16L64 16z"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p>&copy; 2026 Fahmi Dwisaputro.</p>
+        <div class="footer__socials">
+          <a href="https://github.com/FahmiDsp" aria-label="Github" target="_blank">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          </a>
+          <a href="https://www.instagram.com/fahmi.dws/" aria-label="Instagram" target="_blank">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    window.addEventListener('load', function() {
+      const loadingScreen = document.getElementById('loading-screen');
+      setTimeout(() => {
+        loadingScreen.classList.add('hidden');
+      }, 500); // Penundaan 500ms agar transisi terlihat lebih mulus
+
+      // Panggil fungsi animasi sekali agar elemen di layar langsung muncul
+      revealOnScroll();
+    });
+
+    // 1. Logika untuk memunculkan bagian (Fitur & Tentang) saat di-scroll
+    function revealOnScroll() {
+      const reveals = document.querySelectorAll(".reveal");
+      const windowHeight = window.innerHeight;
+      const elementVisible = 50;
+      reveals.forEach((element) => {
+        const elementTop = element.getBoundingClientRect().top;
+        if (elementTop < windowHeight - elementVisible) {
+          element.classList.add("visible");
+        }
+      });
+    }
+    window.addEventListener("scroll", revealOnScroll);
+
+    // 2. Logika Hamburger Menu (Mobile) & Efek Navbar
+    document.addEventListener("DOMContentLoaded", () => {
+      const hamburger = document.getElementById("hamburger");
+      const navLinks = document.getElementById("navLinks");
+      if (hamburger && navLinks) {
+        hamburger.addEventListener("click", () => {
+          navLinks.classList.toggle("active");
+        });
+      }
+      
+      const navbar = document.getElementById("navbar");
+      if (navbar) {
+        window.addEventListener("scroll", () => {
+          navbar.classList.toggle("scrolled", window.scrollY > 50);
+        });
+      }
+    });
+  </script>
+
+  <script src="script.js"></script>
+</body>
+</html>
