@@ -89,4 +89,8 @@ Proyek ini sudah dikonfigurasi secara khusus agar *Backend* maupun *Frontend*-ny
 
 **Fahmi Dwisaputro** © 2026
 
+<<<<<<< HEAD
 Proyek ini dibuat dengan ❤️ menggunakan kombinasi HTML, CSS, JavaScript Murni, dan Node.js.
+=======
+Proyek ini dibuat dengan ❤️ menggunakan kombinasi HTML, CSS, JavaScript Murni, dan Node.js.
+>>>>>>> 9c73171ef94784129562b785fc37964b6419ce54
