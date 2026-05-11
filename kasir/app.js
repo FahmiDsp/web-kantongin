@@ -73,6 +73,7 @@ const state = {
   selectedCategory: "Semua",
   paymentReceived: 0,
   paymentMethod: "Tunai",
+  orderType: "Dine In",
   discount: 0,
   editingId: null,
   latestReceipt: null,
@@ -264,8 +265,8 @@ function cartTotals() {
   const taxPercent = numberOnly(state.settings.taxPercent);
   const tax = Math.round(taxableAmount * (taxPercent / 100));
   const total = taxableAmount + tax;
-  const paid = state.paymentMethod === "QRIS" ? total : numberOnly(state.paymentReceived);
-  const change = state.paymentMethod === "QRIS" ? 0 : Math.max(0, paid - total);
+  const paid = state.paymentMethod === "QRIS" ? total : (state.paymentMethod === "Kasbon" ? 0 : numberOnly(state.paymentReceived));
+  const change = (state.paymentMethod === "QRIS" || state.paymentMethod === "Kasbon") ? 0 : Math.max(0, paid - total);
   return { subtotal, discount, taxableAmount, taxPercent, tax, total, paid, change };
 }
 
@@ -649,7 +650,8 @@ function renderCashier() {
   const products = filteredProducts();
   const totals = cartTotals();
   const isQris = state.paymentMethod === "QRIS";
-  const canComplete = state.cart.length > 0 && totals.total > 0 && (isQris || totals.paid >= totals.total);
+  const isKasbon = state.paymentMethod === "Kasbon";
+  const canComplete = state.cart.length > 0 && totals.total > 0 && (isQris || isKasbon || totals.paid >= totals.total);
   
   return `
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
@@ -711,6 +713,19 @@ function renderCashier() {
               <label for="customerPhone" class="block text-xs font-bold text-gray-600 mb-1.5">No. WhatsApp</label>
               <input id="customerPhone" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-primary-500 focus:ring-4 focus:ring-primary-500/20 outline-none transition-all" type="tel" value="${escapeHtml(state.customerPhone)}" data-input="customer-phone" placeholder="Contoh: 0812..." />
             </div>
+            <div class="col-span-2">
+              <label class="block text-xs font-bold text-gray-600 mb-1.5">Tipe Pesanan</label>
+              <div class="grid grid-cols-2 gap-2">
+                <label class="flex items-center gap-2 p-2 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${state.orderType === 'Dine In' ? 'bg-primary-50 border-primary-500 text-primary-700' : ''}">
+                  <input type="radio" name="orderType" value="Dine In" data-input="order-type" class="w-4 h-4 text-primary-600 focus:ring-primary-500" ${state.orderType === 'Dine In' ? 'checked' : ''} />
+                  <span class="text-sm font-semibold">Dine In</span>
+                </label>
+                <label class="flex items-center gap-2 p-2 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${state.orderType === 'Take Away' ? 'bg-primary-50 border-primary-500 text-primary-700' : ''}">
+                  <input type="radio" name="orderType" value="Take Away" data-input="order-type" class="w-4 h-4 text-primary-600 focus:ring-primary-500" ${state.orderType === 'Take Away' ? 'checked' : ''} />
+                  <span class="text-sm font-semibold">Take Away</span>
+                </label>
+              </div>
+            </div>
           </div>
           
           ${renderCart()}
@@ -723,12 +738,12 @@ function renderCashier() {
             <div>
               <label for="paymentMethod" class="block text-xs font-bold text-gray-600 mb-1.5">Metode</label>
               <select id="paymentMethod" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-primary-500 focus:ring-4 focus:ring-primary-500/20 outline-none transition-all bg-white" data-input="payment-method">
-                ${["Tunai", "QRIS"].map((method) => `<option value="${method}" ${state.paymentMethod === method ? "selected" : ""}>${method}</option>`).join("")}
+                ${["Tunai", "QRIS", "Kasbon"].map((method) => `<option value="${method}" ${state.paymentMethod === method ? "selected" : ""}>${method}</option>`).join("")}
               </select>
             </div>
             <div class="col-span-2">
-              <label for="paidInput" class="block text-xs font-bold text-gray-600 mb-1.5">${isQris ? "Nominal QRIS" : "Uang diterima"}</label>
-              <input id="paidInput" class="w-full px-3 py-2.5 text-base font-bold text-gray-800 border border-gray-200 rounded-lg focus:border-primary-500 focus:ring-4 focus:ring-primary-500/20 outline-none transition-all bg-gray-50" type="text" inputmode="numeric" pattern="[0-9]*" value="${isQris ? rupiah(totals.total) : state.paymentReceived || ""}" data-input="payment" placeholder="${isQris ? "Otomatis sesuai total" : "Masukkan nominal pembayaran"}" ${isQris ? "disabled" : ""} />
+              <label for="paidInput" class="block text-xs font-bold text-gray-600 mb-1.5">${isQris ? "Nominal QRIS" : isKasbon ? "Nominal Kasbon" : "Uang diterima"}</label>
+              <input id="paidInput" class="w-full px-3 py-2.5 text-base font-bold text-gray-800 border border-gray-200 rounded-lg focus:border-primary-500 focus:ring-4 focus:ring-primary-500/20 outline-none transition-all bg-gray-50" type="text" inputmode="numeric" pattern="[0-9]*" value="${isQris || isKasbon ? rupiah(totals.total) : state.paymentReceived || ""}" data-input="payment" placeholder="${isQris ? "Otomatis sesuai total" : isKasbon ? "Otomatis kasbon" : "Masukkan nominal pembayaran"}" ${isQris || isKasbon ? "disabled" : ""} />
             </div>
           </div>
           
@@ -748,7 +763,7 @@ function renderCashier() {
             <button class="col-span-2 flex items-center justify-center gap-2 py-3.5 bg-accent-500 hover:bg-accent-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100" type="button" data-complete-sale ${canComplete ? "" : "disabled"}>
               <span class="w-5 h-5 [&>svg]:w-full [&>svg]:h-full">${icons.receipt}</span><span>Selesaikan</span>
             </button>
-            ${isQris ? "" : `
+            ${isQris || isKasbon ? "" : `
               <button class="col-span-2 flex items-center justify-center gap-2 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100" type="button" data-fill-exact ${state.cart.length ? "" : "disabled"}>
                 <span class="w-5 h-5 [&>svg]:w-full [&>svg]:h-full">${icons.money}</span><span>Uang Pas</span>
               </button>
@@ -863,6 +878,7 @@ function renderReceipt(transaction, options = {}) {
       <div class="receipt-row"><span>${escapeHtml(transaction.code)}</span><strong>${rupiah(transaction.total)}</strong></div>
       <div class="receipt-row"><span>Tanggal</span><strong>${dateLabel(transaction.date)}</strong></div>
       <div class="receipt-row"><span>Pelanggan</span><strong>${escapeHtml(transaction.customerName || "Umum")}</strong></div>
+      <div class="receipt-row"><span>Tipe Pesanan</span><strong>${escapeHtml(transaction.orderType || "Dine In")}</strong></div>
       <div class="receipt-list">
         ${transaction.items.map((item) => `
           <div class="receipt-row"><span>${escapeHtml(item.name)} x ${item.qty}</span><span>${rupiah(item.price * item.qty)}</span></div>
@@ -1439,17 +1455,25 @@ function bindEvents() {
   if (paymentMethod) {
     paymentMethod.addEventListener("change", (event) => {
       state.paymentMethod = event.target.value;
-      if (state.paymentMethod === "QRIS") state.paymentReceived = 0;
+      if (state.paymentMethod === "QRIS" || state.paymentMethod === "Kasbon") state.paymentReceived = 0;
       render();
     });
   }
+
+  document.querySelectorAll('[data-input="order-type"]').forEach((radio) => {
+    radio.addEventListener("change", (event) => {
+      state.orderType = event.target.value;
+      render();
+    });
+  });
 
   const clearCart = document.querySelector("[data-clear-cart]");
   if (clearCart) {
     clearCart.addEventListener("click", () => {
       state.cart = [];
       state.customerName = "";
-        state.customerPhone = "";
+      state.customerPhone = "";
+      state.orderType = "Dine In";
       state.paymentReceived = 0;
       state.discount = 0;
       render();
@@ -1621,7 +1645,8 @@ function sendWhatsAppReceipt(transaction) {
   text += `${state.settings.storeName || "Kasir Toko"}\n`;
   text += `Kode: ${transaction.code}\n`;
   text += `Tanggal: ${dateLabel(transaction.date)}\n`;
-  text += `Pelanggan: ${transaction.customerName || "Umum"}\n\n`;
+  text += `Pelanggan: ${transaction.customerName || "Umum"}\n`;
+  text += `Tipe Pesanan: ${transaction.orderType || "Dine In"}\n\n`;
 
   transaction.items.forEach((item) => {
     text += `${item.name} x ${item.qty}\n`;
@@ -1728,6 +1753,7 @@ function finishSale() {
     date: new Date().toISOString(),
     customerName: state.customerName.trim() || "Umum",
     customerPhone: state.customerPhone.trim(),
+    orderType: state.orderType,
     items: state.cart.map((item) => ({ ...item })),
     subtotal: totals.subtotal,
     discount: totals.discount,
@@ -1991,7 +2017,7 @@ function exportToCSV() {
     return;
   }
 
-  const headers = ["Kode Transaksi", "Tanggal", "Pelanggan", "Item", "Subtotal", "Diskon", "PPN", "Total", "Metode Pembayaran"];
+  const headers = ["Kode Transaksi", "Tanggal", "Pelanggan", "Tipe Pesanan", "Item", "Subtotal", "Diskon", "PPN", "Total", "Metode Pembayaran"];
   
   const rows = state.transactions.map(t => {
     const date = new Date(t.date).toLocaleString('id-ID');
@@ -2000,6 +2026,7 @@ function exportToCSV() {
       t.code,
       date,
       t.customerName || "Umum",
+      t.orderType || "Dine In",
       items,
       t.subtotal,
       t.discount,
