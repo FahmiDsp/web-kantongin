@@ -1728,7 +1728,7 @@ function finishSale() {
   const totals = cartTotals();
   if (!state.cart.length) return;
   
-  if (totals.paid < totals.total) {
+  if (state.paymentMethod !== "Kasbon" && totals.paid < totals.total) {
     showToast("Uang diterima masih kurang.", "error");
     return;
   }
