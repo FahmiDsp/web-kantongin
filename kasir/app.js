@@ -254,7 +254,7 @@ function filteredHistoryTransactions() {
       .map((item) => `${item.name} ${item.sku || ""}`)
       .join(" ")
       .toLowerCase();
-    return transaction.code.toLowerCase().includes(query) || customerText.includes(query) || itemText.includes(query);
+    return transaction.code.toLowerCase().includes(query) || customerText.includes(query) || itemText.includes(query) || String(transaction.paymentMethod || "").toLowerCase().includes(query);
   });
 }
 
@@ -1276,7 +1276,7 @@ function renderHistory() {
         <div class="relative w-full md:w-96">
           <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 [&>svg]:w-full [&>svg]:h-full">${icons.search}</span>
           <label class="sr-only" for="historySearch">Cari transaksi</label>
-          <input id="historySearch" class="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all bg-white" type="search" placeholder="Trace kode transaksi, pelanggan, atau barang" value="${escapeHtml(state.historySearch)}" data-input="history-search" />
+          <input id="historySearch" class="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all bg-white" type="search" placeholder="Trace kode, pelanggan, metode (kasbon), atau barang" value="${escapeHtml(state.historySearch)}" data-input="history-search" />
         </div>
       </div>
     ` : ""}
@@ -1287,7 +1287,7 @@ function renderHistory() {
             <div class="flex-1 min-w-0">
               <h3 class="font-bold text-gray-800 text-lg flex items-center gap-2">
                 ${escapeHtml(transaction.code)}
-                <span class="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-md font-bold uppercase border border-gray-200">${escapeHtml(transaction.paymentMethod)}</span>
+                <span class="text-[10px] px-2 py-0.5 rounded-md font-bold uppercase border ${transaction.paymentMethod === 'Kasbon' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-gray-100 text-gray-500 border-gray-200'}">${escapeHtml(transaction.paymentMethod)}</span>
               </h3>
               <p class="text-xs text-gray-500 mt-1">${dateLabel(transaction.date)} - ${transaction.items.length} jenis barang</p>
               <div class="mt-3 p-3 bg-gray-50 border border-gray-100 rounded-lg text-sm">
