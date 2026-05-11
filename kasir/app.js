@@ -743,7 +743,7 @@ function renderCashier() {
             </div>
             <div class="col-span-2">
               <label for="paidInput" class="block text-xs font-bold text-gray-600 mb-1.5">${isQris ? "Nominal QRIS" : isKasbon ? "Nominal Kasbon" : "Uang diterima"}</label>
-              <input id="paidInput" class="w-full px-3 py-2.5 text-base font-bold text-gray-800 border border-gray-200 rounded-lg focus:border-primary-500 focus:ring-4 focus:ring-primary-500/20 outline-none transition-all bg-gray-50" type="text" inputmode="numeric" pattern="[0-9]*" value="${isQris || isKasbon ? rupiah(totals.total) : state.paymentReceived || ""}" data-input="payment" placeholder="${isQris ? "Otomatis sesuai total" : isKasbon ? "Otomatis kasbon" : "Masukkan nominal pembayaran"}" ${isQris || isKasbon ? "disabled" : ""} />
+              <input id="paidInput" class="w-full px-3 py-2.5 text-base font-bold text-gray-800 border border-gray-200 rounded-lg focus:border-primary-500 focus:ring-4 focus:ring-primary-500/20 outline-none transition-all bg-gray-50" type="text" inputmode="numeric" pattern="[0-9]*" value="${isQris ? rupiah(totals.total) : isKasbon ? rupiah(0) : state.paymentReceived || ""}" data-input="payment" placeholder="${isQris ? "Otomatis sesuai total" : isKasbon ? "Belum dibayar" : "Masukkan nominal pembayaran"}" ${isQris || isKasbon ? "disabled" : ""} />
             </div>
           </div>
           
@@ -1287,7 +1287,7 @@ function renderHistory() {
             <div class="flex-1 min-w-0">
               <h3 class="font-bold text-gray-800 text-lg flex items-center gap-2">
                 ${escapeHtml(transaction.code)}
-                <span class="text-[10px] px-2 py-0.5 rounded-md font-bold uppercase border ${transaction.paymentMethod === 'Kasbon' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-gray-100 text-gray-500 border-gray-200'}">${escapeHtml(transaction.paymentMethod)}</span>
+                <span class="text-[10px] px-2 py-0.5 rounded-md font-bold uppercase border ${transaction.paymentMethod === 'Kasbon' ? (transaction.paid < transaction.total ? 'bg-red-50 text-red-600 border-red-200' : 'bg-green-50 text-green-600 border-green-200') : 'bg-gray-100 text-gray-500 border-gray-200'}">${escapeHtml(transaction.paymentMethod)} ${transaction.paymentMethod === 'Kasbon' ? (transaction.paid < transaction.total ? '(Belum Lunas)' : '(Sudah Lunas)') : ''}</span>
               </h3>
               <p class="text-xs text-gray-500 mt-1">${dateLabel(transaction.date)} - ${transaction.items.length} jenis barang</p>
               <div class="mt-3 p-3 bg-gray-50 border border-gray-100 rounded-lg text-sm">
@@ -1308,6 +1308,11 @@ function renderHistory() {
                   ${transaction.customerPhone ? `
                     <button class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 bg-green-50 border border-green-100 text-green-700 text-xs font-bold rounded-lg hover:bg-green-500 hover:text-white shadow-sm active:scale-95 transition-all" type="button" data-wa-receipt="${escapeHtml(transaction.id)}">
                       <span class="w-3.5 h-3.5 [&>svg]:w-full [&>svg]:h-full">${icons.send}</span><span class="sm:hidden md:inline">Kirim WA</span>
+                    </button>
+                  ` : ""}
+                  ${transaction.paymentMethod === 'Kasbon' && transaction.paid < transaction.total ? `
+                    <button class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 bg-accent-50 border border-accent-100 text-accent-700 text-xs font-bold rounded-lg hover:bg-accent-500 hover:text-white shadow-sm active:scale-95 transition-all" type="button" data-pay-kasbon="${escapeHtml(transaction.id)}">
+                      <span class="w-3.5 h-3.5 [&>svg]:w-full [&>svg]:h-full">${icons.money}</span><span class="sm:hidden md:inline">Lunasi</span>
                     </button>
                   ` : ""}
                 </div>
@@ -1598,6 +1603,19 @@ function bindEvents() {
 
   document.querySelectorAll("[data-cancel-transaction]").forEach((button) => {
     button.addEventListener("click", () => cancelTransaction(button.dataset.cancelTransaction));
+  });
+
+  document.querySelectorAll("[data-pay-kasbon]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const id = button.dataset.payKasbon;
+      const transaction = state.transactions.find((t) => t.id === id);
+      if (transaction && confirm(`Apakah pelanggan ${transaction.customerName || "Umum"} sudah melunasi kasbon sebesar ${rupiah(transaction.total)}?`)) {
+        transaction.paid = transaction.total;
+        saveAll();
+        render();
+        showToast("Kasbon berhasil dilunasi!", "success");
+      }
+    });
   });
 }
 
@@ -2032,7 +2050,7 @@ function exportToCSV() {
       t.discount,
       t.tax,
       t.total,
-      t.paymentMethod
+      t.paymentMethod === "Kasbon" ? (t.paid < t.total ? "Kasbon (Belum Lunas)" : "Kasbon (Sudah Lunas)") : t.paymentMethod
     ].map(value => `"${String(value).replace(/"/g, '""')}"`).join(",");
   });
 
