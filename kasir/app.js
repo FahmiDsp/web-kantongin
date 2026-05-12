@@ -365,7 +365,7 @@ function render() {
     const qrisTotals = cartTotals();
     html += `
       <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-md p-4" id="qrisPayOverlay">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-100">
           <div class="p-5 bg-gradient-to-br from-primary-500 to-primary-700 text-white text-center">
             <div class="flex items-center justify-center gap-2 mb-1">
               <span class="w-5 h-5 [&>svg]:w-full [&>svg]:h-full">${icons.phone}</span>
@@ -379,8 +379,8 @@ function render() {
               <strong class="text-3xl font-extrabold text-accent-700">${rupiah(qrisTotals.total)}</strong>
             </div>
             ${state.settings.qrisImage ? `
-              <div class="bg-white border-2 border-gray-200 rounded-2xl p-3 shadow-lg mb-4">
-                <img src="${escapeHtml(state.settings.qrisImage)}" alt="QRIS Toko" class="w-56 h-56 object-contain" />
+              <div class="bg-white border-2 border-gray-200 rounded-2xl p-4 shadow-lg mb-4">
+                <img src="${escapeHtml(state.settings.qrisImage)}" alt="QRIS Toko" class="w-72 h-72 object-contain mx-auto" />
               </div>
               <p class="text-xs text-gray-400 mb-5">Arahkan kamera ke kode QR untuk membayar</p>
             ` : `
@@ -413,7 +413,7 @@ function render() {
     const kbTrx = state.kasbonPayModal;
     html += `
       <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4" id="kasbonPayOverlay">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden border border-gray-100 animate-in">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden border border-gray-100 animate-in">
           <div class="p-4 border-b border-gray-100 bg-gradient-to-r from-accent-50 to-primary-50 flex justify-between items-center">
             <div>
               <h3 class="font-bold text-gray-800">Lunasi Kasbon</h3>
@@ -437,7 +437,7 @@ function render() {
                 <span class="text-sm font-bold">QRIS</span>
               </button>
             </div>
-            ${state.settings.qrisImage ? `<div id="kasbonQrisPreview" class="hidden mb-4 p-3 border border-primary-200 rounded-xl bg-primary-50/50 text-center"><img src="${escapeHtml(state.settings.qrisImage)}" alt="QRIS" class="w-32 h-32 object-contain mx-auto p-1 bg-white border border-gray-200 rounded-lg shadow-sm" /><p class="text-xs text-gray-500 mt-2">Scan QRIS untuk menerima pembayaran</p></div>` : ""}
+            ${state.settings.qrisImage ? `<div id="kasbonQrisPreview" class="hidden mb-4 p-4 border border-primary-200 rounded-xl bg-primary-50/50 text-center"><img src="${escapeHtml(state.settings.qrisImage)}" alt="QRIS" class="w-64 h-64 object-contain mx-auto p-1 bg-white border border-gray-200 rounded-lg shadow-sm" /><p class="text-xs text-gray-500 mt-3">Scan QRIS untuk menerima pembayaran</p></div>` : ""}
             <button type="button" class="w-full py-3 bg-accent-500 hover:bg-accent-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2" data-confirm-kasbon-pay>
               <span class="w-5 h-5 [&>svg]:w-full [&>svg]:h-full">${icons.receipt}</span>
               <span>Konfirmasi Pelunasan</span>
