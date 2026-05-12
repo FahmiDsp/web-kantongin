@@ -85,7 +85,8 @@ const state = {
   adminUsers: [],
   tempAuthPayload: null,
   adminModal: null,
-  kasbonPayModal: null
+  kasbonPayModal: null,
+  qrisPayModal: false
 };
 
 window.logout = function() {
@@ -356,6 +357,54 @@ function render() {
       </header>
       <main class="flex-1 w-full max-w-[1480px] mx-auto p-4 md:p-6">${renderActiveView()}</main>
       ${state.printReceipt ? `<div class="print-receipt">${renderReceipt(state.printReceipt, { title: "Struk Pembayaran", showButton: false })}</div>` : ""}
+      </div>
+    `;
+  }
+
+  if (state.qrisPayModal) {
+    const qrisTotals = cartTotals();
+    html += `
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-md p-4" id="qrisPayOverlay">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100">
+          <div class="p-5 bg-gradient-to-br from-primary-500 to-primary-700 text-white text-center">
+            <div class="flex items-center justify-center gap-2 mb-1">
+              <span class="w-5 h-5 [&>svg]:w-full [&>svg]:h-full">${icons.phone}</span>
+              <h3 class="font-bold text-lg">Pembayaran QRIS</h3>
+            </div>
+            <p class="text-primary-100 text-xs">Scan kode QR di bawah untuk menyelesaikan pembayaran</p>
+          </div>
+          <div class="p-6 flex flex-col items-center">
+            <div class="bg-gradient-to-br from-accent-50 to-accent-100 border-2 border-accent-200 rounded-2xl px-6 py-3 mb-5 text-center shadow-sm">
+              <span class="block text-xs font-bold text-accent-500 uppercase tracking-wider mb-0.5">Total Pembayaran</span>
+              <strong class="text-3xl font-extrabold text-accent-700">${rupiah(qrisTotals.total)}</strong>
+            </div>
+            ${state.settings.qrisImage ? `
+              <div class="bg-white border-2 border-gray-200 rounded-2xl p-3 shadow-lg mb-4">
+                <img src="${escapeHtml(state.settings.qrisImage)}" alt="QRIS Toko" class="w-56 h-56 object-contain" />
+              </div>
+              <p class="text-xs text-gray-400 mb-5">Arahkan kamera ke kode QR untuk membayar</p>
+            ` : `
+              <div class="py-8 px-6 text-center border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 mb-5 w-full">
+                <span class="w-10 h-10 text-gray-300 [&>svg]:w-full [&>svg]:h-full mx-auto mb-2 block">${icons.phone}</span>
+                <strong class="block text-gray-500 text-sm mb-1">QRIS belum diunggah</strong>
+                <span class="text-xs text-gray-400">Tambahkan gambar QRIS dari Dashboard Barang</span>
+              </div>
+            `}
+            ${qrisTotals.change > 0 ? `
+              <div class="w-full flex items-center justify-between p-3 bg-green-50 border border-green-100 rounded-xl mb-4">
+                <span class="text-sm text-green-600">Kembalian</span>
+                <strong class="text-lg font-extrabold text-green-700">${rupiah(qrisTotals.change)}</strong>
+              </div>
+            ` : ""}
+            <div class="grid grid-cols-2 gap-3 w-full">
+              <button type="button" class="py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-all active:scale-95" data-close-qris-modal>Batal</button>
+              <button type="button" class="py-3 bg-accent-500 hover:bg-accent-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2" data-confirm-qris-pay>
+                <span class="w-5 h-5 [&>svg]:w-full [&>svg]:h-full">${icons.receipt}</span>
+                <span>Sudah Bayar</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     `;
   }
@@ -787,7 +836,20 @@ function renderCashier() {
             </div>
           </div>
           
-          ${isQris ? renderQrisCheckout() : ""}
+          ${isQris && state.settings.qrisImage ? `
+            <div class="mt-4 flex items-center gap-3 p-3 border border-primary-200 rounded-xl bg-primary-50/50 cursor-pointer hover:bg-primary-100/50 transition-colors" data-show-qris-preview>
+              <img src="${escapeHtml(state.settings.qrisImage)}" alt="QRIS" class="w-12 h-12 object-contain p-0.5 bg-white border border-gray-200 rounded-lg shadow-sm shrink-0" />
+              <div class="flex-1 min-w-0">
+                <strong class="block text-sm text-gray-800">QRIS Toko tersedia</strong>
+                <span class="text-xs text-gray-500">Klik Selesaikan untuk menampilkan QRIS pembayaran</span>
+              </div>
+            </div>
+          ` : isQris && !state.settings.qrisImage ? `
+            <div class="mt-4 p-3 border border-dashed border-gray-300 rounded-xl bg-gray-50 text-center">
+              <strong class="block text-gray-600 text-xs mb-0.5">QRIS belum diunggah</strong>
+              <span class="text-[11px] text-gray-400">Tambahkan gambar QRIS dari Dashboard Barang.</span>
+            </div>
+          ` : ""}
           
           <div class="mt-5 bg-gray-50 border border-gray-100 rounded-xl p-4 text-sm">
             <div class="flex justify-between text-gray-500 mb-2"><span>Subtotal</span><strong class="text-gray-800">${rupiah(totals.subtotal)}</strong></div>
@@ -818,23 +880,8 @@ function renderCashier() {
 }
 
 function renderQrisCheckout() {
-  if (!state.settings.qrisImage) {
-    return `
-      <div class="mt-4 p-4 border border-dashed border-gray-300 rounded-xl bg-gray-50 text-center">
-        <strong class="block text-gray-600 text-sm mb-1">QRIS belum diunggah</strong>
-        <span class="text-xs text-gray-500">Tambahkan gambar QRIS dari Dashboard Barang.</span>
-      </div>
-    `;
-  }
-  return `
-    <div class="mt-4 flex items-center justify-between gap-4 p-3 border border-primary-200 rounded-xl bg-primary-50/50">
-      <div>
-        <strong class="block text-sm text-gray-800 mb-1">Scan QRIS toko</strong>
-        <span class="text-xs text-gray-500 leading-relaxed">Pembayaran akan tercatat sesuai total belanja.</span>
-      </div>
-      <img src="${escapeHtml(state.settings.qrisImage)}" alt="QRIS toko" class="w-16 h-16 object-contain p-1 bg-white border border-gray-200 rounded-lg shadow-sm shrink-0" />
-    </div>
-  `;
+  // Kept for backward compatibility, but no longer used inline
+  return '';
 }
 
 function renderProductCard(product) {
@@ -1535,7 +1582,48 @@ function bindEvents() {
 
   const completeSale = document.querySelector("[data-complete-sale]");
   if (completeSale) {
-    completeSale.addEventListener("click", finishSale);
+    completeSale.addEventListener("click", () => {
+      // If QRIS, show modal first
+      if (state.paymentMethod === "QRIS") {
+        const totals = cartTotals();
+        if (!state.cart.length) return;
+        if (totals.paid < totals.total) {
+          showToast("Nominal QRIS masih kurang.", "error");
+          return;
+        }
+        state.qrisPayModal = true;
+        render();
+      } else {
+        finishSale();
+      }
+    });
+  }
+
+  // QRIS modal handlers
+  const closeQrisModal = document.querySelector("[data-close-qris-modal]");
+  if (closeQrisModal) {
+    closeQrisModal.addEventListener("click", () => {
+      state.qrisPayModal = false;
+      render();
+    });
+  }
+
+  const qrisOverlay = document.getElementById("qrisPayOverlay");
+  if (qrisOverlay) {
+    qrisOverlay.addEventListener("click", (e) => {
+      if (e.target === qrisOverlay) {
+        state.qrisPayModal = false;
+        render();
+      }
+    });
+  }
+
+  const confirmQrisPay = document.querySelector("[data-confirm-qris-pay]");
+  if (confirmQrisPay) {
+    confirmQrisPay.addEventListener("click", () => {
+      state.qrisPayModal = false;
+      finishSale();
+    });
   }
 
   document.querySelectorAll("[data-print-receipt]").forEach((button) => {
