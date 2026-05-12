@@ -837,12 +837,13 @@ function renderCashier() {
           </div>
           
           ${isQris && state.settings.qrisImage ? `
-            <div class="mt-4 flex items-center gap-3 p-3 border border-primary-200 rounded-xl bg-primary-50/50 cursor-pointer hover:bg-primary-100/50 transition-colors" data-show-qris-preview>
-              <img src="${escapeHtml(state.settings.qrisImage)}" alt="QRIS" class="w-12 h-12 object-contain p-0.5 bg-white border border-gray-200 rounded-lg shadow-sm shrink-0" />
+            <div class="mt-4 flex items-center gap-3 p-3 border border-primary-300 rounded-xl bg-primary-50 cursor-pointer hover:bg-primary-100 hover:border-primary-400 hover:shadow-md transition-all active:scale-[0.98]" data-show-qris-preview>
+              <img src="${escapeHtml(state.settings.qrisImage)}" alt="QRIS" class="w-14 h-14 object-contain p-1 bg-white border border-gray-200 rounded-lg shadow-sm shrink-0" />
               <div class="flex-1 min-w-0">
-                <strong class="block text-sm text-gray-800">QRIS Toko tersedia</strong>
-                <span class="text-xs text-gray-500">Klik Selesaikan untuk menampilkan QRIS pembayaran</span>
+                <strong class="block text-sm text-primary-700">Scan QRIS toko</strong>
+                <span class="text-xs text-primary-500 font-medium">✨ Klik di sini untuk buka QRIS besar</span>
               </div>
+              <span class="w-5 h-5 text-primary-400 shrink-0 [&>svg]:w-full [&>svg]:h-full">${icons.phone}</span>
             </div>
           ` : isQris && !state.settings.qrisImage ? `
             <div class="mt-4 p-3 border border-dashed border-gray-300 rounded-xl bg-gray-50 text-center">
@@ -1623,6 +1624,15 @@ function bindEvents() {
     confirmQrisPay.addEventListener("click", () => {
       state.qrisPayModal = false;
       finishSale();
+    });
+  }
+
+  // Klik QRIS preview di keranjang untuk buka popup besar
+  const showQrisPreview = document.querySelector("[data-show-qris-preview]");
+  if (showQrisPreview) {
+    showQrisPreview.addEventListener("click", () => {
+      state.qrisPayModal = true;
+      render();
     });
   }
 
