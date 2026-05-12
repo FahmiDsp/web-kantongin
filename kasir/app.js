@@ -437,7 +437,7 @@ function render() {
                 <span class="text-sm font-bold">QRIS</span>
               </button>
             </div>
-            ${state.settings.qrisImage ? `<div id="kasbonQrisPreview" class="hidden mb-4 p-4 border border-primary-200 rounded-xl bg-primary-50/50 text-center"><img src="${escapeHtml(state.settings.qrisImage)}" alt="QRIS" class="w-64 h-64 object-contain mx-auto p-1 bg-white border border-gray-200 rounded-lg shadow-sm" /><p class="text-xs text-gray-500 mt-3">Scan QRIS untuk menerima pembayaran</p></div>` : ""}
+            ${state.settings.qrisImage ? `<div id="kasbonQrisPreview" class="hidden mb-4 p-4 border-2 border-primary-200 rounded-2xl bg-primary-50/50 text-center"><img src="${escapeHtml(state.settings.qrisImage)}" alt="QRIS" class="w-full max-w-xs object-contain mx-auto p-2 bg-white border border-gray-200 rounded-xl shadow-sm" /><p class="text-xs text-gray-500 mt-3">Scan QRIS untuk menerima pembayaran</p></div>` : ""}
             <button type="button" class="w-full py-3 bg-accent-500 hover:bg-accent-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2" data-confirm-kasbon-pay>
               <span class="w-5 h-5 [&>svg]:w-full [&>svg]:h-full">${icons.receipt}</span>
               <span>Konfirmasi Pelunasan</span>
