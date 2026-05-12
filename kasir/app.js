@@ -266,8 +266,8 @@ function cartTotals() {
   const taxPercent = numberOnly(state.settings.taxPercent);
   const tax = Math.round(taxableAmount * (taxPercent / 100));
   const total = taxableAmount + tax;
-  const paid = state.paymentMethod === "QRIS" ? total : (state.paymentMethod === "Kasbon" ? 0 : numberOnly(state.paymentReceived));
-  const change = (state.paymentMethod === "QRIS" || state.paymentMethod === "Kasbon") ? 0 : Math.max(0, paid - total);
+  const paid = state.paymentMethod === "Kasbon" ? 0 : numberOnly(state.paymentReceived);
+  const change = state.paymentMethod === "Kasbon" ? 0 : Math.max(0, paid - total);
   return { subtotal, discount, taxableAmount, taxPercent, tax, total, paid, change };
 }
 
@@ -691,7 +691,7 @@ function renderCashier() {
   const totals = cartTotals();
   const isQris = state.paymentMethod === "QRIS";
   const isKasbon = state.paymentMethod === "Kasbon";
-  const canComplete = state.cart.length > 0 && totals.total > 0 && (isQris || isKasbon || totals.paid >= totals.total);
+  const canComplete = state.cart.length > 0 && totals.total > 0 && (isKasbon || totals.paid >= totals.total);
   
   return `
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
@@ -783,7 +783,7 @@ function renderCashier() {
             </div>
             <div class="col-span-2">
               <label for="paidInput" class="block text-xs font-bold text-gray-600 mb-1.5">${isQris ? "Nominal QRIS" : isKasbon ? "Nominal Kasbon" : "Uang diterima"}</label>
-              <input id="paidInput" class="w-full px-3 py-2.5 text-base font-bold text-gray-800 border border-gray-200 rounded-lg focus:border-primary-500 focus:ring-4 focus:ring-primary-500/20 outline-none transition-all bg-gray-50" type="text" inputmode="numeric" pattern="[0-9]*" value="${isQris ? rupiah(totals.total) : isKasbon ? rupiah(0) : state.paymentReceived || ""}" data-input="payment" placeholder="${isQris ? "Otomatis sesuai total" : isKasbon ? "Belum dibayar" : "Masukkan nominal pembayaran"}" ${isQris || isKasbon ? "disabled" : ""} />
+              <input id="paidInput" class="w-full px-3 py-2.5 text-base font-bold text-gray-800 border border-gray-200 rounded-lg focus:border-primary-500 focus:ring-4 focus:ring-primary-500/20 outline-none transition-all bg-gray-50" type="text" inputmode="numeric" pattern="[0-9]*" value="${isKasbon ? rupiah(0) : state.paymentReceived || ""}" data-input="payment" placeholder="${isQris ? "Masukkan nominal QRIS" : isKasbon ? "Belum dibayar" : "Masukkan nominal pembayaran"}" ${isKasbon ? "disabled" : ""} />
             </div>
           </div>
           
@@ -803,7 +803,7 @@ function renderCashier() {
             <button class="col-span-2 flex items-center justify-center gap-2 py-3.5 bg-accent-500 hover:bg-accent-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100" type="button" data-complete-sale ${canComplete ? "" : "disabled"}>
               <span class="w-5 h-5 [&>svg]:w-full [&>svg]:h-full">${icons.receipt}</span><span>Selesaikan</span>
             </button>
-            ${isQris || isKasbon ? "" : `
+            ${isKasbon ? "" : `
               <button class="col-span-2 flex items-center justify-center gap-2 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100" type="button" data-fill-exact ${state.cart.length ? "" : "disabled"}>
                 <span class="w-5 h-5 [&>svg]:w-full [&>svg]:h-full">${icons.money}</span><span>Uang Pas</span>
               </button>
@@ -1500,7 +1500,7 @@ function bindEvents() {
   if (paymentMethod) {
     paymentMethod.addEventListener("change", (event) => {
       state.paymentMethod = event.target.value;
-      if (state.paymentMethod === "QRIS" || state.paymentMethod === "Kasbon") state.paymentReceived = 0;
+      if (state.paymentMethod === "Kasbon") state.paymentReceived = 0;
       render();
     });
   }
