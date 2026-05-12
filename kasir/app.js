@@ -84,7 +84,8 @@ const state = {
   authMode: initialAuthMode,
   adminUsers: [],
   tempAuthPayload: null,
-  adminModal: null
+  adminModal: null,
+  kasbonPayModal: null
 };
 
 window.logout = function() {
@@ -355,6 +356,45 @@ function render() {
       </header>
       <main class="flex-1 w-full max-w-[1480px] mx-auto p-4 md:p-6">${renderActiveView()}</main>
       ${state.printReceipt ? `<div class="print-receipt">${renderReceipt(state.printReceipt, { title: "Struk Pembayaran", showButton: false })}</div>` : ""}
+      </div>
+    `;
+  }
+
+  if (state.kasbonPayModal) {
+    const kbTrx = state.kasbonPayModal;
+    html += `
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4" id="kasbonPayOverlay">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden border border-gray-100 animate-in">
+          <div class="p-4 border-b border-gray-100 bg-gradient-to-r from-accent-50 to-primary-50 flex justify-between items-center">
+            <div>
+              <h3 class="font-bold text-gray-800">Lunasi Kasbon</h3>
+              <p class="text-xs text-gray-500 mt-0.5">${escapeHtml(kbTrx.customerName || "Umum")} — ${escapeHtml(kbTrx.code)}</p>
+            </div>
+            <button type="button" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all outline-none" data-close-kasbon-modal>✕</button>
+          </div>
+          <div class="p-5">
+            <div class="flex items-center justify-between p-3 bg-gray-50 border border-gray-100 rounded-xl mb-5">
+              <span class="text-sm text-gray-500">Total Tagihan</span>
+              <strong class="text-lg text-accent-600 font-extrabold">${rupiah(kbTrx.total)}</strong>
+            </div>
+            <label class="block text-xs font-bold text-gray-600 mb-2">Metode Pembayaran</label>
+            <div class="grid grid-cols-2 gap-3 mb-5" id="kasbonPayMethodSelect">
+              <button type="button" class="flex flex-col items-center gap-2 p-4 border-2 rounded-xl transition-all hover:shadow-md active:scale-95 border-primary-500 bg-primary-50 text-primary-700 shadow-sm" data-kasbon-method="Tunai">
+                <span class="w-7 h-7 [&>svg]:w-full [&>svg]:h-full">${icons.money}</span>
+                <span class="text-sm font-bold">Tunai</span>
+              </button>
+              <button type="button" class="flex flex-col items-center gap-2 p-4 border-2 rounded-xl transition-all hover:shadow-md active:scale-95 border-gray-200 bg-white text-gray-600" data-kasbon-method="QRIS">
+                <span class="w-7 h-7 [&>svg]:w-full [&>svg]:h-full">${icons.phone}</span>
+                <span class="text-sm font-bold">QRIS</span>
+              </button>
+            </div>
+            ${state.settings.qrisImage ? `<div id="kasbonQrisPreview" class="hidden mb-4 p-3 border border-primary-200 rounded-xl bg-primary-50/50 text-center"><img src="${escapeHtml(state.settings.qrisImage)}" alt="QRIS" class="w-32 h-32 object-contain mx-auto p-1 bg-white border border-gray-200 rounded-lg shadow-sm" /><p class="text-xs text-gray-500 mt-2">Scan QRIS untuk menerima pembayaran</p></div>` : ""}
+            <button type="button" class="w-full py-3 bg-accent-500 hover:bg-accent-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2" data-confirm-kasbon-pay>
+              <span class="w-5 h-5 [&>svg]:w-full [&>svg]:h-full">${icons.receipt}</span>
+              <span>Konfirmasi Pelunasan</span>
+            </button>
+          </div>
+        </div>
       </div>
     `;
   }
@@ -887,7 +927,7 @@ function renderReceipt(transaction, options = {}) {
       <div class="receipt-row"><span>Subtotal</span><strong>${rupiah(transaction.subtotal)}</strong></div>
       <div class="receipt-row"><span>Diskon</span><strong>${rupiah(transaction.discount)}</strong></div>
       <div class="receipt-row"><span>PPN (${formatPercent(transaction.taxPercent || 0)}%)</span><strong>${rupiah(transaction.tax || 0)}</strong></div>
-      <div class="receipt-row"><span>Bayar ${escapeHtml(transaction.paymentMethod)}</span><strong>${rupiah(transaction.paid)}</strong></div>
+      <div class="receipt-row"><span>Bayar ${escapeHtml(transaction.paymentMethod)}${transaction.kasbonPaidMethod ? ' (Lunas - ' + escapeHtml(transaction.kasbonPaidMethod) + ')' : ''}</span><strong>${rupiah(transaction.paid)}</strong></div>
       <div class="receipt-row"><span>Kembali</span><strong>${rupiah(transaction.change)}</strong></div>
       ${state.settings.storeAddress ? `
         <div style="margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--line); text-align: center; color: var(--muted); font-size: 0.85rem; white-space: pre-wrap; line-height: 1.4;">${escapeHtml(state.settings.storeAddress)}</div>
@@ -1287,7 +1327,7 @@ function renderHistory() {
             <div class="flex-1 min-w-0">
               <h3 class="font-bold text-gray-800 text-lg flex items-center gap-2">
                 ${escapeHtml(transaction.code)}
-                <span class="text-[10px] px-2 py-0.5 rounded-md font-bold uppercase border ${transaction.paymentMethod === 'Kasbon' ? (transaction.paid < transaction.total ? 'bg-red-50 text-red-600 border-red-200' : 'bg-green-50 text-green-600 border-green-200') : 'bg-gray-100 text-gray-500 border-gray-200'}">${escapeHtml(transaction.paymentMethod)} ${transaction.paymentMethod === 'Kasbon' ? (transaction.paid < transaction.total ? '(Belum Lunas)' : '(Sudah Lunas)') : ''}</span>
+                <span class="text-[10px] px-2 py-0.5 rounded-md font-bold uppercase border ${transaction.paymentMethod === 'Kasbon' ? (transaction.paid < transaction.total ? 'bg-red-50 text-red-600 border-red-200' : 'bg-green-50 text-green-600 border-green-200') : transaction.paymentMethod === 'QRIS' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200'}">${escapeHtml(transaction.paymentMethod)} ${transaction.paymentMethod === 'Kasbon' ? (transaction.paid < transaction.total ? '(Belum Lunas)' : `(Lunas${transaction.kasbonPaidMethod ? ' - ' + transaction.kasbonPaidMethod : ''})`) : ''}</span>
               </h3>
               <p class="text-xs text-gray-500 mt-1">${dateLabel(transaction.date)} - ${transaction.items.length} jenis barang</p>
               <div class="mt-3 p-3 bg-gray-50 border border-gray-100 rounded-lg text-sm">
@@ -1609,14 +1649,71 @@ function bindEvents() {
     button.addEventListener("click", () => {
       const id = button.dataset.payKasbon;
       const transaction = state.transactions.find((t) => t.id === id);
-      if (transaction && confirm(`Apakah pelanggan ${transaction.customerName || "Umum"} sudah melunasi kasbon sebesar ${rupiah(transaction.total)}?`)) {
-        transaction.paid = transaction.total;
-        saveAll();
+      if (transaction) {
+        state.kasbonPayModal = transaction;
+        state.kasbonPayModal._selectedMethod = "Tunai";
         render();
-        showToast("Kasbon berhasil dilunasi!", "success");
       }
     });
   });
+
+  const closeKasbonModal = document.querySelector("[data-close-kasbon-modal]");
+  if (closeKasbonModal) {
+    closeKasbonModal.addEventListener("click", () => {
+      state.kasbonPayModal = null;
+      render();
+    });
+  }
+
+  const kasbonOverlay = document.getElementById("kasbonPayOverlay");
+  if (kasbonOverlay) {
+    kasbonOverlay.addEventListener("click", (e) => {
+      if (e.target === kasbonOverlay) {
+        state.kasbonPayModal = null;
+        render();
+      }
+    });
+  }
+
+  document.querySelectorAll("[data-kasbon-method]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (state.kasbonPayModal) {
+        state.kasbonPayModal._selectedMethod = btn.dataset.kasbonMethod;
+        // Update button styles
+        document.querySelectorAll("[data-kasbon-method]").forEach((b) => {
+          const isSelected = b.dataset.kasbonMethod === state.kasbonPayModal._selectedMethod;
+          b.className = b.className
+            .replace(/border-primary-500|border-gray-200/g, isSelected ? "border-primary-500" : "border-gray-200")
+            .replace(/bg-primary-50|bg-white/g, isSelected ? "bg-primary-50" : "bg-white")
+            .replace(/text-primary-700|text-gray-600/g, isSelected ? "text-primary-700" : "text-gray-600")
+            .replace(/shadow-sm/g, isSelected ? "shadow-sm" : "");
+          if (isSelected && !b.className.includes("shadow-sm")) b.className += " shadow-sm";
+        });
+        // Show/hide QRIS preview
+        const qrisPreview = document.getElementById("kasbonQrisPreview");
+        if (qrisPreview) {
+          qrisPreview.classList.toggle("hidden", state.kasbonPayModal._selectedMethod !== "QRIS");
+        }
+      }
+    });
+  });
+
+  const confirmKasbonPay = document.querySelector("[data-confirm-kasbon-pay]");
+  if (confirmKasbonPay) {
+    confirmKasbonPay.addEventListener("click", () => {
+      const trx = state.kasbonPayModal;
+      if (!trx) return;
+      const transaction = state.transactions.find((t) => t.id === trx.id);
+      if (transaction) {
+        transaction.paid = transaction.total;
+        transaction.kasbonPaidMethod = trx._selectedMethod;
+        saveAll();
+        state.kasbonPayModal = null;
+        render();
+        showToast(`Kasbon berhasil dilunasi via ${trx._selectedMethod}!`, "success");
+      }
+    });
+  }
 }
 
 function renderAndFocus(id, value) {
@@ -1675,7 +1772,7 @@ function sendWhatsAppReceipt(transaction) {
   if (transaction.discount > 0) text += `Diskon: ${rupiah(transaction.discount)}\n`;
   if (transaction.tax > 0) text += `PPN: ${rupiah(transaction.tax)}\n`;
   text += `*Total: ${rupiah(transaction.total)}*\n`;
-  text += `Bayar (${transaction.paymentMethod}): ${rupiah(transaction.paid)}\n`;
+  text += `Bayar (${transaction.paymentMethod}${transaction.kasbonPaidMethod ? ' - Lunas via ' + transaction.kasbonPaidMethod : ''}): ${rupiah(transaction.paid)}\n`;
   text += `Kembali: ${rupiah(transaction.change)}\n\n`;
   text += `Terima kasih atas kunjungan Anda!`;
   if (state.settings.storeAddress) {
