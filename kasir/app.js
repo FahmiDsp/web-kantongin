@@ -26,7 +26,9 @@ const icons = {
   zap: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
   bill: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>',
   download: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>',
-  key: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>'
+  key: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>',
+  expired: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="m4 4 16 16"/></svg>',
+  minus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M5 12h14"/></svg>'
 };
 
 const STORAGE = {
@@ -301,15 +303,20 @@ function startOfMonthsAgo(months) {
 
 function salesSummaryFrom(startDate) {
   const transactions = state.transactions.filter((transaction) => new Date(transaction.date) >= startDate);
+  const expiredMovements = (state.movements || []).filter((m) => m.type === 'expired' && new Date(m.date) >= startDate);
+  const expiredLoss = expiredMovements.reduce((sum, m) => sum + numberOnly(m.totalLoss || 0), 0);
+  const grossProfit = transactions.reduce((sum, transaction) => {
+    return sum + transaction.items.reduce((itemSum, item) => itemSum + (numberOnly(item.profit || 0) * numberOnly(item.qty)), 0);
+  }, 0);
   return {
     revenue: transactions.reduce((sum, transaction) => sum + numberOnly(transaction.total), 0),
     transactions: transactions.length,
     items: transactions.reduce((sum, transaction) => {
       return sum + transaction.items.reduce((itemSum, item) => itemSum + numberOnly(item.qty), 0);
-        }, 0),
-        profit: transactions.reduce((sum, transaction) => {
-          return sum + transaction.items.reduce((itemSum, item) => itemSum + (numberOnly(item.profit || 0) * numberOnly(item.qty)), 0);
-        }, 0)
+    }, 0),
+    profit: grossProfit,
+    expiredLoss: expiredLoss,
+    netProfit: grossProfit - expiredLoss
   };
 }
 
@@ -1024,6 +1031,13 @@ function renderDashboard() {
           <div class="p-4">${renderStockForm()}</div>
         </div>
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          <div class="p-4 border-b border-gray-100 bg-red-50/50">
+            <h3 class="font-bold text-red-700 flex items-center gap-2"><span class="w-5 h-5 [&>svg]:w-full [&>svg]:h-full">${icons.expired}</span>Buang Stok (Expired)</h3>
+            <p class="text-xs text-red-400 mt-0.5">Kurangi stok barang yang expired/rusak. Kerugian akan dicatat di pencatatan penjualan.</p>
+          </div>
+          <div class="p-4">${renderExpiredForm()}</div>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           <div class="p-4 border-b border-gray-100 bg-gray-50/50">
             <h3 class="font-bold text-gray-800">Pengaturan Pembayaran</h3>
             <p class="text-xs text-gray-500 mt-0.5">Atur QRIS dan PPN untuk transaksi kasir.</p>
@@ -1072,7 +1086,7 @@ function renderSalesOverview() {
     <section class="bg-white border border-gray-200 rounded-xl shadow-sm mb-6 overflow-hidden">
       <div class="p-4 border-b border-gray-100 bg-gray-50/50">
         <h3 class="font-bold text-gray-800">Pencatatan Penjualan</h3>
-        <p class="text-xs text-gray-500 mt-0.5">Ringkasan omzet berdasarkan transaksi yang sudah selesai.</p>
+        <p class="text-xs text-gray-500 mt-0.5">Ringkasan omzet, keuntungan, kerugian expired, dan keuntungan bersih.</p>
       </div>
       <div class="p-4">
         <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
@@ -1083,9 +1097,24 @@ function renderSalesOverview() {
                 <small class="text-xs text-gray-500">${escapeHtml(period.range)}</small>
               </div>
               <strong class="text-lg font-extrabold text-accent-600 my-1">${rupiah(period.summary.revenue)}</strong>
-              <div class="flex items-center gap-1.5 text-xs font-bold text-green-600 bg-green-50 w-fit px-2 py-0.5 rounded-md">
+              <div class="flex items-center gap-1.5 text-xs font-bold text-green-600 bg-green-50 w-fit px-2 py-0.5 rounded-md" title="Keuntungan kotor dari penjualan">
                 <span class="w-3 h-3 [&>svg]:w-full [&>svg]:h-full">${icons.plus}</span>
                 ${rupiah(period.summary.profit)}
+              </div>
+              ${period.summary.expiredLoss > 0 ? `
+                <div class="flex items-center gap-1.5 text-xs font-bold text-red-600 bg-red-50 w-fit px-2 py-0.5 rounded-md" title="Kerugian dari barang expired/dibuang">
+                  <span class="w-3 h-3 [&>svg]:w-full [&>svg]:h-full">${icons.minus}</span>
+                  ${rupiah(period.summary.expiredLoss)}
+                </div>
+              ` : `
+                <div class="flex items-center gap-1.5 text-xs font-bold text-gray-400 bg-gray-50 w-fit px-2 py-0.5 rounded-md" title="Belum ada kerugian expired">
+                  <span class="w-3 h-3 [&>svg]:w-full [&>svg]:h-full">${icons.minus}</span>
+                  ${rupiah(0)}
+                </div>
+              `}
+              <div class="flex items-center gap-1.5 text-xs font-extrabold w-fit px-2.5 py-1 rounded-md border ${period.summary.netProfit >= 0 ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-red-700 bg-red-50 border-red-200'}" title="Keuntungan Bersih = Keuntungan - Kerugian Expired">
+                <span>Bersih:</span>
+                <span>${rupiah(period.summary.netProfit)}</span>
               </div>
               <div class="flex items-center justify-between pt-3 border-t border-dashed border-gray-200 text-xs text-gray-500 mt-1">
                 <span>${period.summary.transactions} trx</span>
@@ -1206,6 +1235,36 @@ function renderStockForm() {
       </div>
       <button class="flex items-center justify-center gap-2 py-2.5 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition-all active:scale-95 mt-2" type="submit">
         <span class="w-4 h-4 [&>svg]:w-full [&>svg]:h-full">${icons.plus}</span><span>Tambah Stok</span>
+      </button>
+    </form>
+  `;
+}
+
+function renderExpiredForm() {
+  const inputClass = "w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-4 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all bg-white";
+  const labelClass = "block text-xs font-bold text-gray-600 mb-1.5";
+  
+  return `
+    <form id="expiredForm" class="flex flex-col gap-4">
+      <div>
+        <label for="expiredProduct" class="${labelClass}">Pilih barang expired</label>
+        <select id="expiredProduct" name="productId" class="${inputClass}" required>
+          <option value="">Pilih barang</option>
+          ${[...state.products].sort((a, b) => a.name.localeCompare(b.name)).map((product) => `
+            <option value="${product.id}">${escapeHtml(product.name)} - stok ${product.stock} ${escapeHtml(product.unit)}</option>
+          `).join("")}
+        </select>
+      </div>
+      <div>
+        <label for="expiredQuantity" class="${labelClass}">Jumlah dibuang</label>
+        <input id="expiredQuantity" name="quantity" class="${inputClass}" required type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Contoh: 5" />
+      </div>
+      <div>
+        <label for="expiredNote" class="${labelClass}">Alasan</label>
+        <textarea id="expiredNote" name="note" class="${inputClass} min-h-[80px] resize-y" placeholder="Contoh: Kadaluarsa, rusak, dll."></textarea>
+      </div>
+      <button class="flex items-center justify-center gap-2 py-2.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition-all active:scale-95 mt-2" type="submit">
+        <span class="w-4 h-4 [&>svg]:w-full [&>svg]:h-full">${icons.expired}</span><span>Buang & Catat Kerugian</span>
       </button>
     </form>
   `;
@@ -1658,6 +1717,11 @@ function bindEvents() {
   const stockForm = document.getElementById("stockForm");
   if (stockForm) {
     stockForm.addEventListener("submit", addStock);
+  }
+
+  const expiredForm = document.getElementById("expiredForm");
+  if (expiredForm) {
+    expiredForm.addEventListener("submit", handleExpiredStock);
   }
 
   const settingsForm = document.getElementById("settingsForm");
@@ -2156,6 +2220,40 @@ function addStock(event) {
   showToast(`Stok ${product.name} bertambah ${quantity} ${product.unit}.`);
 }
 
+function handleExpiredStock(event) {
+  event.preventDefault();
+  const formData = new FormData(event.target);
+  const productId = formData.get("productId");
+  const quantity = numberOnly(formData.get("quantity"));
+  const note = String(formData.get("note") || "").trim();
+  const product = state.products.find((item) => item.id === productId);
+  if (!product || quantity <= 0) {
+    showToast("Pilih barang dan isi jumlah yang dibuang.", "error");
+    return;
+  }
+  if (quantity > product.stock) {
+    showToast(`Jumlah melebihi stok tersedia (${product.stock} ${product.unit}).`, "error");
+    return;
+  }
+  const costPerUnit = numberOnly(product.costPrice || product.price);
+  const totalLoss = costPerUnit * quantity;
+  
+  product.stock -= quantity;
+  state.movements.unshift({
+    id: uid("exp"),
+    date: new Date().toISOString(),
+    type: 'expired',
+    productId,
+    productName: product.name,
+    quantity,
+    costPerUnit,
+    totalLoss,
+    note: note || 'Barang expired/dibuang'
+  });
+  saveAll();
+  showToast(`${quantity} ${product.unit} ${product.name} dibuang. Kerugian ${rupiah(totalLoss)} tercatat.`, "warning");
+}
+
 function quickStock(productId) {
   const product = state.products.find((item) => item.id === productId);
   if (!product) return;
@@ -2230,11 +2328,12 @@ function exportToCSV() {
     return;
   }
 
-  const headers = ["Kode Transaksi", "Tanggal", "Pelanggan", "Tipe Pesanan", "Item", "Subtotal", "Diskon", "PPN", "Total", "Metode Pembayaran"];
+  const headers = ["Kode Transaksi", "Tanggal", "Pelanggan", "Tipe Pesanan", "Item", "Subtotal", "Diskon", "PPN", "Total", "Metode Pembayaran", "Keuntungan Kotor"];
   
   const rows = state.transactions.map(t => {
     const date = new Date(t.date).toLocaleString('id-ID');
     const items = t.items.map(i => `${i.name} (${i.qty})`).join("; ");
+    const trxProfit = t.items.reduce((sum, item) => sum + (numberOnly(item.profit || 0) * numberOnly(item.qty)), 0);
     return [
       t.code,
       date,
@@ -2245,11 +2344,31 @@ function exportToCSV() {
       t.discount,
       t.tax,
       t.total,
-      t.paymentMethod === "Kasbon" ? (t.paid < t.total ? "Kasbon (Belum Lunas)" : "Kasbon (Sudah Lunas)") : t.paymentMethod
+      t.paymentMethod === "Kasbon" ? (t.paid < t.total ? "Kasbon (Belum Lunas)" : "Kasbon (Sudah Lunas)") : t.paymentMethod,
+      trxProfit
     ].map(value => `"${String(value).replace(/"/g, '""')}"`).join(",");
   });
 
-  const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n");
+  // Add expired loss rows
+  const expiredMovements = (state.movements || []).filter((m) => m.type === 'expired');
+  const expiredRows = expiredMovements.map(m => {
+    const date = new Date(m.date).toLocaleString('id-ID');
+    return [
+      `EXP-${m.id}`,
+      date,
+      "-",
+      "-",
+      `${m.productName} (${m.quantity} dibuang)`,
+      0,
+      0,
+      0,
+      0,
+      "Expired/Buang",
+      -m.totalLoss
+    ].map(value => `"${String(value).replace(/"/g, '""')}"`).join(",");
+  });
+
+  const csvContent = "\uFEFF" + [headers.join(","), ...rows, ...expiredRows].join("\n");
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   
