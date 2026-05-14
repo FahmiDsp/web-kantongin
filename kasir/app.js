@@ -1014,6 +1014,7 @@ function renderDashboard() {
       ${metricCard(icons.receipt, "Penjualan hari ini", rupiah(stats.todaysRevenue))}
     </section>
     ${renderSalesOverview()}
+    ${renderSalesTable()}
     <section class="grid grid-cols-1 lg:grid-cols-[380px_1fr] xl:grid-cols-[420px_1fr] gap-6 items-start">
       <div class="flex flex-col gap-6">
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
@@ -1124,6 +1125,123 @@ function renderSalesOverview() {
           `).join("")}
         </div>
       </div>
+    </section>
+  `;
+}
+
+function renderSalesTable() {
+  const allTransactions = [...state.transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const expiredMovements = (state.movements || []).filter((m) => m.type === 'expired').sort((a, b) => new Date(b.date) - new Date(a.date));
+  const hasData = allTransactions.length > 0 || expiredMovements.length > 0;
+  
+  // Build combined rows: transactions (positive) + expired (negative)
+  const combinedRows = [];
+  
+  allTransactions.forEach(t => {
+    const trxProfit = t.items.reduce((sum, item) => sum + (numberOnly(item.profit || 0) * numberOnly(item.qty)), 0);
+    combinedRows.push({
+      date: t.date,
+      code: t.code,
+      description: t.items.map(i => `${i.name} x${i.qty}`).join(', '),
+      customer: t.customerName || 'Umum',
+      method: t.paymentMethod + (t.paymentMethod === 'Kasbon' ? (t.paid < t.total ? ' (Belum Lunas)' : ' (Lunas)') : ''),
+      total: t.total,
+      profit: trxProfit,
+      loss: 0,
+      net: trxProfit,
+      type: 'sale'
+    });
+  });
+  
+  expiredMovements.forEach(m => {
+    combinedRows.push({
+      date: m.date,
+      code: `EXP-${m.id.slice(0, 8)}`,
+      description: `${m.productName} (${m.quantity} dibuang)`,
+      customer: '-',
+      method: 'Expired/Buang',
+      total: 0,
+      profit: 0,
+      loss: m.totalLoss || 0,
+      net: -(m.totalLoss || 0),
+      type: 'expired',
+      note: m.note || ''
+    });
+  });
+  
+  // Sort combined by date descending
+  combinedRows.sort((a, b) => new Date(b.date) - new Date(a.date));
+  
+  // Calculate totals
+  const totalRevenue = combinedRows.filter(r => r.type === 'sale').reduce((sum, r) => sum + r.total, 0);
+  const totalProfit = combinedRows.reduce((sum, r) => sum + r.profit, 0);
+  const totalLoss = combinedRows.reduce((sum, r) => sum + r.loss, 0);
+  const totalNet = totalProfit - totalLoss;
+  
+  return `
+    <section class="bg-white border border-gray-200 rounded-xl shadow-sm mb-6 overflow-hidden">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 border-b border-gray-100 bg-gray-50/50">
+        <div>
+          <h3 class="font-bold text-gray-800">Tabel Laporan Penjualan</h3>
+          <p class="text-xs text-gray-500 mt-0.5">Detail semua transaksi dan kerugian expired dalam satu tabel.</p>
+        </div>
+        <button class="flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-100 text-green-700 rounded-lg hover:bg-green-500 hover:text-white transition-all font-semibold active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shrink-0" type="button" data-export-csv ${hasData ? '' : 'disabled'}>
+          <span class="w-5 h-5 [&>svg]:w-full [&>svg]:h-full">${icons.download}</span><span>Download CSV</span>
+        </button>
+      </div>
+      ${hasData ? `
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse whitespace-nowrap">
+            <thead>
+              <tr>
+                <th class="px-4 py-3 bg-gray-50/80 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Tanggal</th>
+                <th class="px-4 py-3 bg-gray-50/80 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Kode</th>
+                <th class="px-4 py-3 bg-gray-50/80 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Keterangan</th>
+                <th class="px-4 py-3 bg-gray-50/80 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Pelanggan</th>
+                <th class="px-4 py-3 bg-gray-50/80 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Metode</th>
+                <th class="px-4 py-3 bg-gray-50/80 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-wider text-right">Total</th>
+                <th class="px-4 py-3 bg-green-50/80 border-b border-green-100 text-[10px] font-bold text-green-600 uppercase tracking-wider text-right">+ Untung</th>
+                <th class="px-4 py-3 bg-red-50/80 border-b border-red-100 text-[10px] font-bold text-red-600 uppercase tracking-wider text-right">- Rugi</th>
+                <th class="px-4 py-3 bg-emerald-50/80 border-b border-emerald-100 text-[10px] font-bold text-emerald-700 uppercase tracking-wider text-right">Bersih</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              ${combinedRows.map(row => {
+                const isExpired = row.type === 'expired';
+                const rowBg = isExpired ? 'bg-red-50/30' : '';
+                return `
+                  <tr class="${rowBg} hover:bg-gray-50/50 transition-colors">
+                    <td class="px-4 py-2.5 text-xs text-gray-500">${dateLabel(row.date)}</td>
+                    <td class="px-4 py-2.5">
+                      <span class="text-xs font-bold ${isExpired ? 'text-red-600' : 'text-gray-800'}">${escapeHtml(row.code)}</span>
+                    </td>
+                    <td class="px-4 py-2.5 text-xs text-gray-600 max-w-[200px] truncate" title="${escapeHtml(row.description)}${isExpired && row.note ? ' — ' + escapeHtml(row.note) : ''}">
+                      ${isExpired ? `<span class="inline-flex items-center gap-1"><span class="w-3 h-3 text-red-500 [&>svg]:w-full [&>svg]:h-full">${icons.expired}</span>${escapeHtml(row.description)}</span>` : escapeHtml(row.description)}
+                    </td>
+                    <td class="px-4 py-2.5 text-xs text-gray-500">${escapeHtml(row.customer)}</td>
+                    <td class="px-4 py-2.5">
+                      <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${isExpired ? 'bg-red-50 text-red-600' : row.method.includes('Kasbon') ? 'bg-amber-50 text-amber-600' : row.method === 'QRIS' ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600'}">${escapeHtml(row.method)}</span>
+                    </td>
+                    <td class="px-4 py-2.5 text-sm font-bold text-gray-800 text-right">${isExpired ? '-' : rupiah(row.total)}</td>
+                    <td class="px-4 py-2.5 text-sm font-bold text-green-600 text-right">${row.profit > 0 ? '+' + rupiah(row.profit) : '-'}</td>
+                    <td class="px-4 py-2.5 text-sm font-bold text-red-600 text-right">${row.loss > 0 ? '-' + rupiah(row.loss) : '-'}</td>
+                    <td class="px-4 py-2.5 text-sm font-extrabold text-right ${row.net >= 0 ? 'text-emerald-600' : 'text-red-600'}">${row.net >= 0 ? '+' : ''}${rupiah(row.net)}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+            <tfoot>
+              <tr class="bg-gray-50 border-t-2 border-gray-200">
+                <td colspan="5" class="px-4 py-3 text-xs font-extrabold text-gray-700 uppercase tracking-wider">Total Keseluruhan</td>
+                <td class="px-4 py-3 text-sm font-extrabold text-gray-800 text-right">${rupiah(totalRevenue)}</td>
+                <td class="px-4 py-3 text-sm font-extrabold text-green-600 text-right">+${rupiah(totalProfit)}</td>
+                <td class="px-4 py-3 text-sm font-extrabold text-red-600 text-right">${totalLoss > 0 ? '-' + rupiah(totalLoss) : '-'}</td>
+                <td class="px-4 py-3 text-sm font-extrabold text-right ${totalNet >= 0 ? 'text-emerald-700 bg-emerald-50' : 'text-red-700 bg-red-50'} rounded-r-lg">${totalNet >= 0 ? '+' : ''}${rupiah(totalNet)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      ` : `<div class="py-12 px-6 text-center text-gray-500 text-sm">Belum ada data transaksi atau expired untuk ditampilkan.</div>`}
     </section>
   `;
 }
@@ -1410,9 +1528,6 @@ function renderHistory() {
         <p class="text-sm text-gray-500 mt-1">Semua transaksi yang selesai akan tersimpan di browser ini.</p>
       </div>
       <div class="flex gap-2">
-        <button class="flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-100 text-green-700 rounded-lg hover:bg-green-500 hover:text-white transition-all font-semibold active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed" type="button" data-export-csv ${state.transactions.length ? "" : "disabled"}>
-          <span class="w-5 h-5 [&>svg]:w-full [&>svg]:h-full">${icons.download}</span><span class="hidden sm:inline">Export CSV</span>
-        </button>
         <button class="flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-100 text-red-600 rounded-lg hover:bg-red-500 hover:text-white transition-all font-semibold active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed" type="button" data-clear-history ${state.transactions.length ? "" : "disabled"}>
           <span class="w-5 h-5 [&>svg]:w-full [&>svg]:h-full">${icons.trash}</span><span class="hidden sm:inline">Hapus Riwayat</span>
         </button>
