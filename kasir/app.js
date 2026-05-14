@@ -88,7 +88,8 @@ const state = {
   tempAuthPayload: null,
   adminModal: null,
   kasbonPayModal: null,
-  qrisPayModal: false
+  qrisPayModal: false,
+  salesTableLimit: 10
 };
 
 window.logout = function() {
@@ -1206,7 +1207,7 @@ function renderSalesTable() {
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-              ${combinedRows.map(row => {
+              ${combinedRows.slice(0, state.salesTableLimit).map(row => {
                 const isExpired = row.type === 'expired';
                 const rowBg = isExpired ? 'bg-red-50/30' : '';
                 return `
@@ -1241,6 +1242,14 @@ function renderSalesTable() {
             </tfoot>
           </table>
         </div>
+        ${combinedRows.length > state.salesTableLimit ? `
+          <div class="p-4 border-t border-gray-100 text-center">
+            <button class="inline-flex items-center gap-2 px-6 py-2.5 bg-primary-50 border border-primary-200 text-primary-700 font-bold text-sm rounded-xl hover:bg-primary-500 hover:text-white hover:border-primary-500 transition-all active:scale-95 shadow-sm" type="button" data-show-more-sales>
+              <span>Tampilkan Lainnya</span>
+              <span class="text-xs font-medium opacity-75">(${combinedRows.length - state.salesTableLimit} lagi)</span>
+            </button>
+          </div>
+        ` : ''}
       ` : `<div class="py-12 px-6 text-center text-gray-500 text-sm">Belum ada data transaksi atau expired untuk ditampilkan.</div>`}
     </section>
   `;
@@ -1643,6 +1652,7 @@ function bindEvents() {
     button.addEventListener("click", () => {
       state.activeView = button.dataset.view;
       state.latestReceipt = state.activeView === "cashier" ? state.latestReceipt : null;
+      state.salesTableLimit = 10;
       render();
     });
   });
@@ -1916,6 +1926,14 @@ function bindEvents() {
   const exportCsv = document.querySelector("[data-export-csv]");
   if (exportCsv) {
     exportCsv.addEventListener("click", exportToCSV);
+  }
+
+  const showMoreSales = document.querySelector("[data-show-more-sales]");
+  if (showMoreSales) {
+    showMoreSales.addEventListener("click", () => {
+      state.salesTableLimit += 10;
+      render();
+    });
   }
 
   document.querySelectorAll("[data-cancel-transaction]").forEach((button) => {
