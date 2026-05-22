@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { Search, FileSpreadsheet, Printer, MessageSquare, Trash2, CheckCircle2, X, AlertTriangle, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, FileSpreadsheet, Printer, MessageSquare, Trash2, CheckCircle2, X } from 'lucide-react';
+import QRCode from 'qrcode';
+import { generateDynamicQRIS } from '../qris';
 
 export default function History({
   transactions,
@@ -10,14 +12,29 @@ export default function History({
   onCancelTransaction,
   onRepayKasbon,
   onExportCsv,
-  showToast,
   rupiah,
-  numberOnly
+  numberOnly,
 }) {
   const [historySearch, setHistorySearch] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState('Hari ini'); // 'Hari ini', '1 Minggu', '1 Bulan', '3 Bulan', '6 Bulan', '1 Tahun'
   const [salesTableLimit, setSalesTableLimit] = useState(10);
   const [kasbonPayModal, setKasbonPayModal] = useState(null); // transaction object
+  const [repayQrUrl, setRepayQrUrl] = useState('');
+
+  useEffect(() => {
+    if (kasbonPayModal && kasbonPayModal._selectedMethod === 'QRIS' && settings.qrisString) {
+      try {
+        const dynamicQris = generateDynamicQRIS(settings.qrisString, kasbonPayModal.total);
+        QRCode.toDataURL(dynamicQris, { margin: 2, scale: 6 })
+          .then((url) => setRepayQrUrl(url))
+          .catch((err) => console.error('Failed to generate dynamic QRIS for kasbon:', err));
+      } catch (err) {
+        console.error('Failed to run generateDynamicQRIS for kasbon:', err);
+      }
+    } else {
+      setRepayQrUrl('');
+    }
+  }, [kasbonPayModal, kasbonPayModal?._selectedMethod, settings.qrisString]);
 
   // Helper date functions
   const startOfToday = () => {
@@ -42,11 +59,16 @@ export default function History({
 
   const getPeriodStartDate = () => {
     switch (selectedPeriod) {
-      case '1 Minggu': return startOfDaysAgo(7);
-      case '1 Bulan': return startOfMonthsAgo(1);
-      case '3 Bulan': return startOfMonthsAgo(3);
-      case '6 Bulan': return startOfMonthsAgo(6);
-      case '1 Tahun': return startOfMonthsAgo(12);
+      case '1 Minggu':
+        return startOfDaysAgo(7);
+      case '1 Bulan':
+        return startOfMonthsAgo(1);
+      case '3 Bulan':
+        return startOfMonthsAgo(3);
+      case '6 Bulan':
+        return startOfMonthsAgo(6);
+      case '1 Tahun':
+        return startOfMonthsAgo(12);
       case 'Hari ini':
       default:
         return startOfToday();
@@ -56,20 +78,20 @@ export default function History({
   const startDate = getPeriodStartDate();
 
   // Filter transactions and movements by date & search query
-  const filteredTransactions = transactions.filter(t => {
+  const filteredTransactions = transactions.filter((t) => {
     const tDate = new Date(t.date);
     if (tDate < startDate) return false;
 
     const query = historySearch.trim().toLowerCase();
     if (!query) return true;
 
-    const itemsStr = t.items.map(i => i.name).join(' ');
-    return [t.code, t.customerName, t.customerPhone, t.paymentMethod, itemsStr].some(field => 
+    const itemsStr = t.items.map((i) => i.name).join(' ');
+    return [t.code, t.customerName, t.customerPhone, t.paymentMethod, itemsStr].some((field) =>
       (field || '').toLowerCase().includes(query)
     );
   });
 
-  const periodMovements = (movements || []).filter(m => {
+  const periodMovements = (movements || []).filter((m) => {
     const mDate = new Date(m.date);
     return mDate >= startDate;
   });
@@ -78,15 +100,17 @@ export default function History({
   const omzetKotor = filteredTransactions.reduce((sum, t) => sum + t.total, 0);
   const totalTransaksi = filteredTransactions.length;
   const totalBarangTerjual = filteredTransactions.reduce(
-    (sum, t) => sum + t.items.reduce((s, item) => s + item.qty, 0), 0
+    (sum, t) => sum + t.items.reduce((s, item) => s + item.qty, 0),
+    0
   );
 
   const labaKotor = filteredTransactions.reduce(
-    (sum, t) => sum + t.items.reduce((s, item) => s + (numberOnly(item.profit || 0) * numberOnly(item.qty)), 0), 0
+    (sum, t) => sum + t.items.reduce((s, item) => s + numberOnly(item.profit || 0) * numberOnly(item.qty), 0),
+    0
   );
 
   const kerugianExpired = periodMovements
-    .filter(m => m.type === 'expired')
+    .filter((m) => m.type === 'expired')
     .reduce((sum, m) => sum + (m.totalLoss || 0), 0);
 
   const labaBersih = labaKotor - kerugianExpired;
@@ -95,7 +119,7 @@ export default function History({
   const handleOpenRepay = (trx) => {
     setKasbonPayModal({
       ...trx,
-      _selectedMethod: 'Tunai'
+      _selectedMethod: 'Tunai',
     });
   };
 
@@ -110,7 +134,9 @@ export default function History({
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Riwayat Penjualan & Laporan</h2>
-          <p className="text-sm text-gray-500 mt-1">Pantau performa penjualan harian, laba kotor, kerugian expired, dan laba bersih.</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Pantau performa penjualan harian, laba kotor, kerugian expired, dan laba bersih.
+          </p>
         </div>
       </div>
 
@@ -150,11 +176,15 @@ export default function History({
           <strong className="text-sm font-extrabold text-gray-800 block truncate">{rupiah(omzetKotor)}</strong>
         </div>
         <div className="bg-white p-4 border border-gray-200 rounded-xl shadow-sm">
-          <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Total Transaksi</span>
+          <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+            Total Transaksi
+          </span>
           <strong className="text-sm font-extrabold text-gray-800 block truncate">{totalTransaksi}</strong>
         </div>
         <div className="bg-white p-4 border border-gray-200 rounded-xl shadow-sm">
-          <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Barang Terjual</span>
+          <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+            Barang Terjual
+          </span>
           <strong className="text-sm font-extrabold text-gray-800 block truncate">{totalBarangTerjual}</strong>
         </div>
         <div className="bg-white p-4 border border-gray-200 rounded-xl shadow-sm">
@@ -162,12 +192,18 @@ export default function History({
           <strong className="text-sm font-extrabold text-primary-600 block truncate">{rupiah(labaKotor)}</strong>
         </div>
         <div className="bg-white p-4 border border-gray-200 rounded-xl shadow-sm">
-          <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 text-red-500">Kerugian Expired</span>
+          <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 text-red-500">
+            Kerugian Expired
+          </span>
           <strong className="text-sm font-extrabold text-red-500 block truncate">-{rupiah(kerugianExpired)}</strong>
         </div>
         <div className="bg-white p-4 border border-gray-200 rounded-xl shadow-sm bg-primary-50/30 border-primary-200">
-          <span className="block text-[10px] font-bold text-primary-600 uppercase tracking-wider mb-1">Laba Bersih</span>
-          <strong className={`text-sm font-extrabold block truncate ${labaBersih >= 0 ? 'text-primary-700' : 'text-red-600'}`}>
+          <span className="block text-[10px] font-bold text-primary-600 uppercase tracking-wider mb-1">
+            Laba Bersih
+          </span>
+          <strong
+            className={`text-sm font-extrabold block truncate ${labaBersih >= 0 ? 'text-primary-700' : 'text-red-600'}`}
+          >
             {rupiah(labaBersih)}
           </strong>
         </div>
@@ -178,13 +214,16 @@ export default function History({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 border-b border-gray-100 bg-gray-50/50">
           <div>
             <h3 className="font-bold text-gray-800">Daftar Transaksi</h3>
-            <p className="text-xs text-gray-500 mt-0.5">Menampilkan {Math.min(salesTableLimit, filteredTransactions.length)} dari {filteredTransactions.length} transaksi</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Menampilkan {Math.min(salesTableLimit, filteredTransactions.length)} dari {filteredTransactions.length}{' '}
+              transaksi
+            </p>
           </div>
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input 
-              type="text" 
-              placeholder="Cari kode, nama, item..." 
+            <input
+              type="text"
+              placeholder="Cari kode, nama, item..."
               value={historySearch}
               onChange={(e) => {
                 setHistorySearch(e.target.value);
@@ -223,23 +262,21 @@ export default function History({
                       <td className="px-5 py-3.5">
                         <strong className="font-mono text-xs text-gray-800">{t.code}</strong>
                       </td>
-                      <td className="px-5 py-3.5 text-xs text-gray-500">
-                        {new Date(t.date).toLocaleString('id-ID')}
-                      </td>
+                      <td className="px-5 py-3.5 text-xs text-gray-500">{new Date(t.date).toLocaleString('id-ID')}</td>
                       <td className="px-5 py-3.5">
                         <div>
                           <strong className="text-gray-800 block text-xs">{t.customerName || 'Umum'}</strong>
-                          {t.customerPhone && <span className="text-[10px] text-gray-400 block">{t.customerPhone}</span>}
+                          {t.customerPhone && (
+                            <span className="text-[10px] text-gray-400 block">{t.customerPhone}</span>
+                          )}
                         </div>
                       </td>
                       <td className="px-5 py-3.5 max-w-xs truncate">
                         <span className="text-gray-600 font-medium text-xs">
-                          {t.items.map(i => `${i.name} (${i.qty})`).join(', ')}
+                          {t.items.map((i) => `${i.name} (${i.qty})`).join(', ')}
                         </span>
                       </td>
-                      <td className="px-5 py-3.5 text-right font-bold text-gray-850">
-                        {rupiah(t.total)}
-                      </td>
+                      <td className="px-5 py-3.5 text-right font-bold text-gray-850">{rupiah(t.total)}</td>
                       <td className="px-5 py-3.5 text-center">
                         {isUnpaidKasbon ? (
                           <span className="px-2.5 py-0.5 rounded-full bg-red-50 border border-red-200 text-red-600 font-bold text-[10px]">
@@ -309,15 +346,22 @@ export default function History({
 
       {/* Repayment Modal (Lunasi Kasbon) */}
       {kasbonPayModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4" id="kasbonPayOverlay">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4"
+          id="kasbonPayOverlay"
+        >
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200">
             <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
               <h3 className="font-bold text-gray-800">Pelunasan Kasbon</h3>
-              <button onClick={() => setKasbonPayModal(null)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+              <button onClick={() => setKasbonPayModal(null)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
             </div>
             <div className="p-5 flex flex-col gap-4">
               <div className="bg-accent-50 border border-accent-200 p-3.5 rounded-xl text-center">
-                <span className="block text-xs font-bold text-accent-500 uppercase tracking-wider mb-0.5">Sisa Hutang Kasbon</span>
+                <span className="block text-xs font-bold text-accent-500 uppercase tracking-wider mb-0.5">
+                  Sisa Hutang Kasbon
+                </span>
                 <strong className="text-2xl font-extrabold text-accent-700">{rupiah(kasbonPayModal.total)}</strong>
               </div>
 
@@ -344,17 +388,37 @@ export default function History({
               {/* QRIS Repay Code Preview */}
               {kasbonPayModal._selectedMethod === 'QRIS' && (
                 <div className="mt-2 flex flex-col items-center">
-                  {settings.qrisImage ? (
-                    <img src={settings.qrisImage} alt="QRIS" className="w-48 h-48 object-contain border rounded-lg bg-white p-2" />
+                  {settings.qrisString && repayQrUrl ? (
+                    <div className="flex flex-col items-center w-full">
+                      <img
+                        src={repayQrUrl}
+                        alt="QRIS Dinamis"
+                        className="w-48 h-48 object-contain border rounded-lg bg-white p-2 mb-2"
+                      />
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-green-50 text-green-700 font-extrabold text-[9px] uppercase rounded-full border border-green-200 tracking-wider mb-2 animate-pulse">
+                        ✓ QRIS Dinamis Aktif
+                      </span>
+                    </div>
+                  ) : settings.qrisImage ? (
+                    <div className="flex flex-col items-center w-full">
+                      <img
+                        src={settings.qrisImage}
+                        alt="QRIS Statis"
+                        className="w-48 h-48 object-contain border rounded-lg bg-white p-2 mb-2"
+                      />
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-50 text-amber-700 font-extrabold text-[9px] uppercase rounded-full border border-amber-250 tracking-wider mb-2">
+                        QRIS Statis
+                      </span>
+                    </div>
                   ) : (
                     <div className="w-full text-center border-2 border-dashed border-gray-200 rounded-lg p-6 bg-gray-50">
-                      <span className="block text-xs font-semibold text-gray-400">QRIS Toko belum diset</span>
+                      <span className="block text-xs font-semibold text-gray-400">QRIS Toko belum diatur</span>
                     </div>
                   )}
                 </div>
               )}
 
-              <button 
+              <button
                 onClick={handleConfirmRepay}
                 className="w-full py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-xl shadow-md transition-all active:scale-95 mt-2 flex items-center justify-center gap-1.5"
               >

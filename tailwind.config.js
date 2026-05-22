@@ -1,8 +1,9 @@
+import daisyui from 'daisyui';
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
-    "./index.html",
-    "./kasir/index.html",
+    "./src/index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
@@ -34,5 +35,5 @@ export default {
       }
     },
   },
-  plugins: [],
+  plugins: [daisyui],
 }

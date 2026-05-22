@@ -23,9 +23,9 @@ export default function Admin({ adminUsers, token, onLogout, showToast }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ newPassword })
+        body: JSON.stringify({ newPassword }),
       });
 
       const data = await res.json();
@@ -53,15 +53,15 @@ export default function Admin({ adminUsers, token, onLogout, showToast }) {
               <p className="text-xs text-gray-500">Pusat kontrol dan pemantauan aktivitas seluruh toko</p>
             </div>
           </div>
-          <button 
+          <button
             onClick={onLogout}
-            type="button" 
+            type="button"
             className="w-full sm:w-auto px-4 py-2 bg-red-50 text-red-600 font-bold text-sm rounded-lg hover:bg-red-100 transition-all active:scale-95 flex items-center justify-center gap-2"
           >
             <LogOut className="w-4 h-4" /> Logout Akses
           </button>
         </header>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="bg-white p-5 border border-gray-200 rounded-xl shadow-sm flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center shrink-0">
@@ -77,7 +77,9 @@ export default function Admin({ adminUsers, token, onLogout, showToast }) {
               <Box className="w-6 h-6" />
             </div>
             <div>
-              <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Total Barang Terdaftar</span>
+              <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
+                Total Barang Terdaftar
+              </span>
               <strong className="text-2xl font-extrabold text-gray-800">{totalProducts}</strong>
             </div>
           </div>
@@ -91,7 +93,7 @@ export default function Admin({ adminUsers, token, onLogout, showToast }) {
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           <div className="p-5 border-b border-gray-100 bg-gray-50/50">
             <h2 className="font-bold text-gray-800 text-lg">Daftar Akun Toko</h2>
@@ -113,7 +115,7 @@ export default function Admin({ adminUsers, token, onLogout, showToast }) {
                     </td>
                   </tr>
                 ) : (
-                  adminUsers.map(u => (
+                  adminUsers.map((u) => (
                     <tr key={u.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
@@ -137,9 +139,9 @@ export default function Admin({ adminUsers, token, onLogout, showToast }) {
                         </div>
                       </td>
                       <td className="px-5 py-4 text-right">
-                        <button 
+                        <button
                           onClick={() => setAdminModal({ id: u.id, username: u.username })}
-                          type="button" 
+                          type="button"
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-50 hover:text-primary-600 shadow-sm active:scale-95 transition-all outline-none"
                         >
                           <Key className="w-3.5 h-3.5" /> Ubah Sandi
@@ -159,9 +161,12 @@ export default function Admin({ adminUsers, token, onLogout, showToast }) {
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200">
             <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
               <h3 className="font-bold text-gray-800">Ubah Sandi Pengguna</h3>
-              <button 
-                type="button" 
-                onClick={() => { setAdminModal(null); setNewPassword(''); }}
+              <button
+                type="button"
+                onClick={() => {
+                  setAdminModal(null);
+                  setNewPassword('');
+                }}
                 className="text-gray-400 hover:text-gray-600 outline-none"
               >
                 <X className="w-5 h-5" />
@@ -173,18 +178,18 @@ export default function Admin({ adminUsers, token, onLogout, showToast }) {
                   Atur ulang password untuk akun toko <strong className="text-gray-800">@{adminModal.username}</strong>.
                 </p>
                 <label className="block text-xs font-bold text-gray-600 mb-1.5">Password Baru</label>
-                <input 
-                  type="password" 
+                <input
+                  type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-primary-500 focus:ring-4 focus:ring-primary-500/20 outline-none transition-all" 
-                  required 
-                  minLength={6} 
-                  placeholder="Minimal 6 karakter" 
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-primary-500 focus:ring-4 focus:ring-primary-500/20 outline-none transition-all"
+                  required
+                  minLength={6}
+                  placeholder="Minimal 6 karakter"
                 />
               </div>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={resetLoading}
                 className="w-full mt-2 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-xl shadow-md transition-all active:scale-95 flex justify-center items-center gap-2"
               >

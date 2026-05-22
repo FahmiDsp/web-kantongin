@@ -3,17 +3,17 @@
     {
       "id": "admin1",
       "username": "admin",
-      "password": "Fahmi12345#",
+      "password": "admin_password_placeholder",
       "role": "admin",
       "name": "Super Admin",
-      "email": "fahmidwisaputro2006@gmail.com"
+      "email": "admin@example.com"
     },
     {
       "id": "usr_1778412259606",
-      "name": "fahmi",
-      "username": "fahmi",
-      "email": "fahmidwisaputro2006@gmail.com",
-      "password": "Fahmi123#",
+      "name": "user",
+      "username": "user",
+      "email": "user@example.com",
+      "password": "user_password_placeholder",
       "role": "user"
     }
   ],

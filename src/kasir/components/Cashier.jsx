@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { Search, ShoppingCart, Trash2, Plus, Minus, Phone, Printer, MessageSquare, PlusCircle, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, ShoppingCart, Trash2, Plus, Minus, Printer, MessageSquare, AlertCircle } from 'lucide-react';
+import QRCode from 'qrcode';
+import { generateDynamicQRIS } from '../qris';
 
 export default function Cashier({
   products,
@@ -24,28 +26,13 @@ export default function Cashier({
   showToast,
   rupiah,
   numberOnly,
-  uid
 }) {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Semua');
   const [qrisPayModal, setQrisPayModal] = useState(false);
+  const [dynamicQrUrl, setDynamicQrUrl] = useState('');
 
-  // Dynamic categories
-  const categories = ['Semua', ...Array.from(new Set(products.map(p => p.category))).sort()];
-
-  // Filter products
-  const query = search.trim().toLowerCase();
-  const filteredProducts = products
-    .filter(product => selectedCategory === 'Semua' || product.category === selectedCategory)
-    .filter(product => {
-      if (!query) return true;
-      return [product.name, product.sku, product.category].some(item => 
-        (item || '').toLowerCase().includes(query)
-      );
-    })
-    .sort((a, b) => a.name.localeCompare(b.name));
-
-  // Cart calculations
+  // Cart calculations (declared early to prevent Temporal Dead Zone ReferenceError in useEffect dependency array)
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
   const calculatedDiscount = Math.min(numberOnly(discount), subtotal);
   const taxableAmount = subtotal - calculatedDiscount;
@@ -57,35 +44,66 @@ export default function Cashier({
 
   const canComplete = cart.length > 0 && total > 0 && (paymentMethod === 'Kasbon' || paid >= total);
 
+  useEffect(() => {
+    if (qrisPayModal && settings.qrisString) {
+      try {
+        const dynamicQris = generateDynamicQRIS(settings.qrisString, total);
+        QRCode.toDataURL(dynamicQris, { margin: 2, scale: 6 })
+          .then((url) => setDynamicQrUrl(url))
+          .catch((err) => console.error('Failed to generate dynamic QRIS:', err));
+      } catch (err) {
+        console.error('Failed to run generateDynamicQRIS:', err);
+      }
+    } else {
+      setDynamicQrUrl('');
+    }
+  }, [qrisPayModal, settings.qrisString, total]);
+
+  // Dynamic categories
+  const categories = ['Semua', ...Array.from(new Set(products.map((p) => p.category))).sort()];
+
+  // Filter products
+  const query = search.trim().toLowerCase();
+  const filteredProducts = products
+    .filter((product) => selectedCategory === 'Semua' || product.category === selectedCategory)
+    .filter((product) => {
+      if (!query) return true;
+      return [product.name, product.sku, product.category].some((item) => (item || '').toLowerCase().includes(query));
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
+
   const handleAddToCart = (product) => {
     if (product.stock <= 0) {
       showToast('Stok barang tidak tersedia.', 'error');
       return;
     }
-    const existing = cart.find(item => item.id === product.id);
+    const existing = cart.find((item) => item.id === product.id);
     if (existing) {
       if (existing.qty >= product.stock) {
         showToast('Jumlah di keranjang sudah sama dengan stok tersedia.', 'warning');
         return;
       }
-      setCart(cart.map(item => item.id === product.id ? { ...item, qty: item.qty + 1 } : item));
+      setCart(cart.map((item) => (item.id === product.id ? { ...item, qty: item.qty + 1 } : item)));
     } else {
-      setCart([...cart, {
-        id: product.id,
-        name: product.name,
-        sku: product.sku,
-        price: product.price,
-        costPrice: product.costPrice || product.price,
-        profit: product.profit || 0,
-        qty: 1
-      }]);
+      setCart([
+        ...cart,
+        {
+          id: product.id,
+          name: product.name,
+          sku: product.sku,
+          price: product.price,
+          costPrice: product.costPrice || product.price,
+          profit: product.profit || 0,
+          qty: 1,
+        },
+      ]);
     }
     setLatestReceipt(null);
   };
 
   const handleUpdateQty = (productId, action) => {
-    const item = cart.find(cartItem => cartItem.id === productId);
-    const product = products.find(p => p.id === productId);
+    const item = cart.find((cartItem) => cartItem.id === productId);
+    const product = products.find((p) => p.id === productId);
     if (!item) return;
 
     if (action === 'increase') {
@@ -93,15 +111,15 @@ export default function Cashier({
         showToast('Stok tidak cukup untuk menambah jumlah.', 'warning');
         return;
       }
-      setCart(cart.map(i => i.id === productId ? { ...i, qty: i.qty + 1 } : i));
+      setCart(cart.map((i) => (i.id === productId ? { ...i, qty: i.qty + 1 } : i)));
     } else if (action === 'decrease') {
       if (item.qty <= 1) {
-        setCart(cart.filter(i => i.id !== productId));
+        setCart(cart.filter((i) => i.id !== productId));
       } else {
-        setCart(cart.map(i => i.id === productId ? { ...i, qty: i.qty - 1 } : i));
+        setCart(cart.map((i) => (i.id === productId ? { ...i, qty: i.qty - 1 } : i)));
       }
     } else if (action === 'remove') {
-      setCart(cart.filter(i => i.id !== productId));
+      setCart(cart.filter((i) => i.id !== productId));
     }
   };
 
@@ -139,7 +157,7 @@ export default function Cashier({
           <p className="text-sm text-gray-500 mt-1">Pilih barang, atur jumlah, lalu selesaikan pembayaran.</p>
         </div>
       </div>
-      
+
       <section className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6 items-start">
         {/* Katalog Barang */}
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
@@ -150,7 +168,7 @@ export default function Cashier({
             </div>
             <div className="relative w-full sm:w-64">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400" />
-              <input 
+              <input
                 type="text"
                 placeholder="Cari nama, SKU, kategori..."
                 value={search}
@@ -203,13 +221,9 @@ export default function Cashier({
                     {/* Media foto/ikon */}
                     <div className="w-full h-24 rounded-lg bg-gray-50 flex items-center justify-center mb-3 overflow-hidden text-2xl relative">
                       {product.photo ? (
-                        <img 
-                          src={product.photo} 
-                          alt={product.name} 
-                          className="w-full h-full object-cover" 
-                        />
+                        <img src={product.photo} alt={product.name} className="w-full h-full object-cover" />
                       ) : (
-                        <div 
+                        <div
                           className="w-full h-full flex items-center justify-center text-white text-lg font-bold"
                           style={{ backgroundColor: product.color || '#15803d' }}
                         >
@@ -227,7 +241,7 @@ export default function Cashier({
                         </span>
                       )}
                     </div>
-                    
+
                     <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider truncate mb-0.5">
                       {product.sku || 'TANPA SKU'}
                     </span>
@@ -235,9 +249,7 @@ export default function Cashier({
                       {product.name}
                     </strong>
                     <div className="flex justify-between items-center mt-auto pt-2">
-                      <span className="text-xs font-bold text-primary-600">
-                        {rupiah(product.price)}
-                      </span>
+                      <span className="text-xs font-bold text-primary-600">{rupiah(product.price)}</span>
                       <span className="text-[10px] text-gray-400">
                         Stok: <strong className="text-gray-600 font-bold">{product.stock}</strong>
                       </span>
@@ -270,22 +282,26 @@ export default function Cashier({
           <div className="p-4 border-b border-gray-100 bg-white">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Nama Pelanggan</label>
-                <input 
-                  type="text" 
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  Nama Pelanggan
+                </label>
+                <input
+                  type="text"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder="Umum" 
+                  placeholder="Umum"
                   className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary-500 focus:ring-4 focus:ring-primary-500/20 outline-none"
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">No. WhatsApp</label>
-                <input 
-                  type="text" 
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  No. WhatsApp
+                </label>
+                <input
+                  type="text"
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
-                  placeholder="08xxxxxxxx" 
+                  placeholder="08xxxxxxxx"
                   className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary-500 focus:ring-4 focus:ring-primary-500/20 outline-none"
                 />
               </div>
@@ -301,15 +317,18 @@ export default function Cashier({
               </div>
             ) : (
               cart.map((item) => (
-                <div key={item.id} className="p-4 flex items-center justify-between gap-3 hover:bg-gray-50/50 transition-colors">
+                <div
+                  key={item.id}
+                  className="p-4 flex items-center justify-between gap-3 hover:bg-gray-50/50 transition-colors"
+                >
                   <div className="min-w-0">
                     <strong className="text-xs font-bold text-gray-800 block truncate">{item.name}</strong>
                     <span className="text-[10px] text-primary-600 font-bold block mt-0.5">{rupiah(item.price)}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         onClick={() => handleUpdateQty(item.id, 'decrease')}
                         className="p-1 px-2 hover:bg-gray-100 text-gray-500 text-xs transition-colors"
                       >
@@ -318,16 +337,16 @@ export default function Cashier({
                       <span className="px-2 py-0.5 text-xs font-bold text-gray-800 bg-gray-50/50 min-w-[24px] text-center">
                         {item.qty}
                       </span>
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         onClick={() => handleUpdateQty(item.id, 'increase')}
                         className="p-1 px-2 hover:bg-gray-100 text-gray-500 text-xs transition-colors"
                       >
                         <Plus className="w-3 h-3" />
                       </button>
                     </div>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={() => handleUpdateQty(item.id, 'remove')}
                       className="p-1.5 text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
                     >
@@ -345,11 +364,11 @@ export default function Cashier({
               <span>Subtotal</span>
               <strong className="font-semibold text-gray-800">{rupiah(subtotal)}</strong>
             </div>
-            
+
             <div className="flex justify-between items-center text-xs">
               <span className="text-gray-500">Diskon (Rp)</span>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 value={discount}
                 onChange={(e) => setDiscount(e.target.value)}
                 className="w-24 px-2 py-1 text-right border border-gray-200 rounded-lg text-xs focus:border-primary-500 outline-none"
@@ -370,8 +389,10 @@ export default function Cashier({
 
             {/* Metode Pembayaran */}
             <div className="mt-1">
-              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Metode Bayar</label>
-              <select 
+              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                Metode Bayar
+              </label>
+              <select
                 value={paymentMethod}
                 onChange={(e) => {
                   setPaymentMethod(e.target.value);
@@ -389,9 +410,11 @@ export default function Cashier({
             {paymentMethod !== 'Kasbon' && (
               <div className="flex items-center justify-between gap-3 mt-1.5">
                 <div className="flex-1">
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Uang Diterima</label>
-                  <input 
-                    type="text" 
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    Uang Diterima
+                  </label>
+                  <input
+                    type="text"
                     value={paymentReceived}
                     onChange={(e) => setPaymentReceived(e.target.value)}
                     className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary-500 outline-none text-right font-bold"
@@ -438,7 +461,9 @@ export default function Cashier({
             <h4 className="font-extrabold text-gray-800 text-lg uppercase">{settings.storeName || 'Kantongin'}</h4>
             {settings.storeAddress && <p className="text-[11px] text-gray-500 mt-1">{settings.storeAddress}</p>}
             <p className="text-[10px] text-gray-400 mt-2">Kode: {latestReceipt.code}</p>
-            <p className="text-[10px] text-gray-400 mt-0.5">Tanggal: {new Date(latestReceipt.date).toLocaleString('id-ID')}</p>
+            <p className="text-[10px] text-gray-400 mt-0.5">
+              Tanggal: {new Date(latestReceipt.date).toLocaleString('id-ID')}
+            </p>
           </div>
 
           <div className="py-4 border-b border-dashed border-gray-200 divide-y divide-gray-50">
@@ -446,7 +471,9 @@ export default function Cashier({
               <div key={idx} className="flex justify-between items-center py-2 text-xs">
                 <div>
                   <strong className="font-bold text-gray-700">{item.name}</strong>
-                  <span className="block text-[10px] text-gray-400 mt-0.5">{item.qty} x {rupiah(item.price)}</span>
+                  <span className="block text-[10px] text-gray-400 mt-0.5">
+                    {item.qty} x {rupiah(item.price)}
+                  </span>
                 </div>
                 <strong className="font-semibold text-gray-800">{rupiah(item.price * item.qty)}</strong>
               </div>
@@ -515,7 +542,10 @@ export default function Cashier({
 
       {/* Modal QRIS Pembayaran */}
       {qrisPayModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-md p-4" id="qrisPayOverlay">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-md p-4"
+          id="qrisPayOverlay"
+        >
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200">
             <div className="p-5 bg-gradient-to-br from-primary-500 to-primary-700 text-white text-center">
               <h3 className="font-bold text-lg">Pembayaran QRIS</h3>
@@ -523,17 +553,35 @@ export default function Cashier({
             </div>
             <div className="p-6 flex flex-col items-center">
               <div className="bg-gradient-to-br from-accent-50 to-accent-100 border-2 border-accent-200 rounded-2xl px-6 py-3 mb-5 text-center shadow-sm">
-                <span className="block text-xs font-bold text-accent-500 uppercase tracking-wider mb-0.5">Total Pembayaran</span>
+                <span className="block text-xs font-bold text-accent-500 uppercase tracking-wider mb-0.5">
+                  Total Pembayaran
+                </span>
                 <strong className="text-3xl font-extrabold text-accent-700">{rupiah(total)}</strong>
               </div>
-              {settings.qrisImage ? (
-                <div className="bg-white border-2 border-gray-200 rounded-2xl p-4 shadow-lg mb-4">
-                  <img src={settings.qrisImage} alt="QRIS Toko" className="w-72 h-72 object-contain mx-auto" />
+              {settings.qrisString && dynamicQrUrl ? (
+                <div className="flex flex-col items-center w-full">
+                  <div className="bg-white border-2 border-gray-200 rounded-2xl p-4 shadow-lg mb-3">
+                    <img src={dynamicQrUrl} alt="QRIS Dinamis Toko" className="w-72 h-72 object-contain mx-auto" />
+                  </div>
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-50 text-green-700 font-extrabold text-[10px] uppercase rounded-full border border-green-200 tracking-wider mb-4 animate-pulse">
+                    ✓ QRIS Dinamis Aktif ({rupiah(total)})
+                  </span>
+                </div>
+              ) : settings.qrisImage ? (
+                <div className="flex flex-col items-center w-full">
+                  <div className="bg-white border-2 border-gray-200 rounded-2xl p-4 shadow-lg mb-3">
+                    <img src={settings.qrisImage} alt="QRIS Statis Toko" className="w-72 h-72 object-contain mx-auto" />
+                  </div>
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-50 text-amber-700 font-extrabold text-[10px] uppercase rounded-full border border-amber-250 tracking-wider mb-4">
+                    QRIS Statis (Scan & Input Manual)
+                  </span>
                 </div>
               ) : (
                 <div className="py-8 px-6 text-center border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 mb-5 w-full">
-                  <strong className="block text-gray-500 text-sm mb-1">QRIS belum diunggah</strong>
-                  <span className="text-xs text-gray-400">Tambahkan gambar QRIS dari Pengaturan Toko di Dashboard</span>
+                  <strong className="block text-gray-500 text-sm mb-1">QRIS belum diatur</strong>
+                  <span className="text-xs text-gray-400">
+                    Hubungkan QRIS Dinamis atau Statis Anda di Pengaturan Pembayaran (Dashboard)
+                  </span>
                 </div>
               )}
               {change > 0 && (
@@ -543,15 +591,15 @@ export default function Cashier({
                 </div>
               )}
               <div className="grid grid-cols-2 gap-3 w-full mt-2">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setQrisPayModal(false)}
                   className="py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-all active:scale-95"
                 >
                   Batal
                 </button>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={handleConfirmQrisPay}
                   className="py-3 bg-accent-500 hover:bg-accent-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
                 >

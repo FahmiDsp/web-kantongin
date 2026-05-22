@@ -1,41 +1,167 @@
 import React, { useState, useEffect } from 'react';
-import { Store, ShoppingBag, BarChart2, History as HistoryIcon, LogOut, Loader2, AlertCircle } from 'lucide-react';
+import { ShoppingBag, BarChart2, History as HistoryIcon, LogOut, Loader2, AlertCircle } from 'lucide-react';
 import Auth from './components/Auth';
 import Admin from './components/Admin';
 import Cashier from './components/Cashier';
 import Dashboard from './components/Dashboard';
 import History from './components/History';
+import LandingPage from './components/LandingPage';
 
 const defaultSettings = {
   qrisImage: '',
+  qrisString: '',
   taxPercent: 0,
   storeName: 'Kasir Toko',
   storeAddress: '',
-  storePhoto: ''
+  storePhoto: '',
 };
 
 const defaultProducts = [
-  { id: 'p-beras', name: 'Beras Premium 5 kg', sku: 'BR-5000', category: 'Sembako', costPrice: 65000, profit: 7000, price: 72000, stock: 18, minStock: 5, unit: 'pak', color: '#166534' },
-  { id: 'p-minyak', name: 'Minyak Goreng 1 L', sku: 'MY-1000', category: 'Sembako', costPrice: 16000, profit: 2500, price: 18500, stock: 26, minStock: 8, unit: 'botol', color: '#d5962f' },
-  { id: 'p-gula', name: 'Gula Pasir 1 kg', sku: 'GL-1000', category: 'Sembako', costPrice: 14000, profit: 2000, price: 16000, stock: 20, minStock: 6, unit: 'kg', color: '#6a7c3c' },
-  { id: 'p-kopi', name: 'Kopi Sachet', sku: 'KP-010', category: 'Minuman', costPrice: 2000, profit: 500, price: 2500, stock: 80, minStock: 20, unit: 'pcs', color: '#6c4b3e' },
-  { id: 'p-teh', name: 'Teh Celup 25 pcs', sku: 'TH-025', category: 'Minuman', costPrice: 7500, profit: 2000, price: 9500, stock: 14, minStock: 5, unit: 'box', color: '#2f7d50' },
-  { id: 'p-mie', name: 'Mie Instan Goreng', sku: 'MI-001', category: 'Makanan', costPrice: 2800, profit: 700, price: 3500, stock: 55, minStock: 15, unit: 'pcs', color: '#c95743' },
-  { id: 'p-sabun', name: 'Sabun Mandi', sku: 'SB-001', category: 'Rumah Tangga', costPrice: 3500, profit: 1000, price: 4500, stock: 30, minStock: 10, unit: 'pcs', color: '#355f91' },
-  { id: 'p-tisu', name: 'Tisu Gulung', sku: 'TS-001', category: 'Rumah Tangga', costPrice: 9000, profit: 3000, price: 12000, stock: 9, minStock: 10, unit: 'pak', color: '#7d5578' }
+  {
+    id: 'p-beras',
+    name: 'Beras Premium 5 kg',
+    sku: 'BR-5000',
+    category: 'Sembako',
+    costPrice: 65000,
+    profit: 7000,
+    price: 72000,
+    stock: 18,
+    minStock: 5,
+    unit: 'pak',
+    color: '#166534',
+  },
+  {
+    id: 'p-minyak',
+    name: 'Minyak Goreng 1 L',
+    sku: 'MY-1000',
+    category: 'Sembako',
+    costPrice: 16000,
+    profit: 2500,
+    price: 18500,
+    stock: 26,
+    minStock: 8,
+    unit: 'botol',
+    color: '#d5962f',
+  },
+  {
+    id: 'p-gula',
+    name: 'Gula Pasir 1 kg',
+    sku: 'GL-1000',
+    category: 'Sembako',
+    costPrice: 14000,
+    profit: 2000,
+    price: 16000,
+    stock: 20,
+    minStock: 6,
+    unit: 'kg',
+    color: '#6a7c3c',
+  },
+  {
+    id: 'p-kopi',
+    name: 'Kopi Sachet',
+    sku: 'KP-010',
+    category: 'Minuman',
+    costPrice: 2000,
+    profit: 500,
+    price: 2500,
+    stock: 80,
+    minStock: 20,
+    unit: 'pcs',
+    color: '#6c4b3e',
+  },
+  {
+    id: 'p-teh',
+    name: 'Teh Celup 25 pcs',
+    sku: 'TH-025',
+    category: 'Minuman',
+    costPrice: 7500,
+    profit: 2000,
+    price: 9500,
+    stock: 14,
+    minStock: 5,
+    unit: 'box',
+    color: '#2f7d50',
+  },
+  {
+    id: 'p-mie',
+    name: 'Mie Instan Goreng',
+    sku: 'MI-001',
+    category: 'Makanan',
+    costPrice: 2800,
+    profit: 700,
+    price: 3500,
+    stock: 55,
+    minStock: 15,
+    unit: 'pcs',
+    color: '#c95743',
+  },
+  {
+    id: 'p-sabun',
+    name: 'Sabun Mandi',
+    sku: 'SB-001',
+    category: 'Rumah Tangga',
+    costPrice: 3500,
+    profit: 1000,
+    price: 4500,
+    stock: 30,
+    minStock: 10,
+    unit: 'pcs',
+    color: '#355f91',
+  },
+  {
+    id: 'p-tisu',
+    name: 'Tisu Gulung',
+    sku: 'TS-001',
+    category: 'Rumah Tangga',
+    costPrice: 9000,
+    profit: 3000,
+    price: 12000,
+    stock: 9,
+    minStock: 10,
+    unit: 'pak',
+    color: '#7d5578',
+  },
 ];
 
 export default function App() {
   const [loading, setLoading] = useState(true);
-  
+
+  // Routing state
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+
+  // Listen to popstate event for browser Back/Forward navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPath(window.location.pathname);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigate = (path) => {
+    window.history.pushState({}, '', path);
+    setCurrentPath(path);
+  };
+
   // Auth state
   const [token, setToken] = useState(localStorage.getItem('kantongin_token') || null);
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('kantongin_user') || 'null'));
-  const [authMode, setAuthMode] = useState(new URLSearchParams(window.location.search).get('mode') === 'register' ? 'register' : 'login');
-  
+  const [authMode, setAuthMode] = useState('login');
+
+  // Update authMode based on search parameters when path changes
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const mode = searchParams.get('mode');
+    if (mode === 'register') {
+      setAuthMode('register');
+    } else {
+      setAuthMode('login');
+    }
+  }, [currentPath]);
+
   // App views
   const [activeView, setActiveView] = useState('cashier');
-  
+
   // Data states
   const [products, setProducts] = useState([]);
   const [transactions, setTransactions] = useState([]);
@@ -70,6 +196,26 @@ export default function App() {
     }
   }, [toast]);
 
+  const renderToast = () => {
+    if (!toast) return null;
+    return (
+      <div className="fixed bottom-5 right-5 z-50 animate-in slide-in-from-bottom duration-200">
+        <div
+          className={`px-4 py-3 rounded-xl shadow-lg border flex items-center gap-2.5 font-semibold text-xs text-white ${
+            toast.type === 'error'
+              ? 'bg-red-600 border-red-700'
+              : toast.type === 'warning'
+                ? 'bg-orange-500 border-orange-600'
+                : 'bg-primary-600 border-primary-750'
+          }`}
+        >
+          <AlertCircle className="w-4.5 h-4.5" />
+          <span>{toast.message}</span>
+        </div>
+      </div>
+    );
+  };
+
   // Load initial app data
   useEffect(() => {
     const initApp = async () => {
@@ -79,7 +225,7 @@ export default function App() {
           setActiveView('admin');
           try {
             const res = await fetch('/api/admin/users', {
-              headers: { 'Authorization': `Bearer ${token}` }
+              headers: { Authorization: `Bearer ${token}` },
             });
             if (res.ok) {
               const data = await res.json();
@@ -94,11 +240,11 @@ export default function App() {
         } else {
           try {
             const res = await fetch('/api/store', {
-              headers: { 'Authorization': `Bearer ${token}` }
+              headers: { Authorization: `Bearer ${token}` },
             });
             if (!res.ok) throw new Error('Session expired');
             const data = await res.json();
-            
+
             // Fallback to defaults if no products exist
             const loadedProducts = data.products && data.products.length > 0 ? data.products : defaultProducts;
             setProducts(loadedProducts);
@@ -116,6 +262,7 @@ export default function App() {
     };
 
     initApp();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, user]);
 
   // Unified save state and cloud sync
@@ -133,14 +280,14 @@ export default function App() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           products: newProducts || products,
           transactions: newTransactions || transactions,
           movements: newMovements || movements,
-          settings: newSettings || settings
-        })
+          settings: newSettings || settings,
+        }),
       });
     } catch (error) {
       console.error('Gagal sinkronisasi data ke cloud:', error);
@@ -167,6 +314,7 @@ export default function App() {
     setLatestReceipt(null);
     setActiveView('cashier');
     setAuthMode('login');
+    navigate('/kasir');
   };
 
   // Helper utility functions
@@ -175,7 +323,7 @@ export default function App() {
       style: 'currency',
       currency: 'IDR',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(Number(val || 0));
   };
 
@@ -190,8 +338,8 @@ export default function App() {
   // POS transaction finisher
   const handleFinishSale = (totals) => {
     // Deduct stock in UI
-    const updatedProducts = products.map(product => {
-      const cartItem = cart.find(item => item.id === product.id);
+    const updatedProducts = products.map((product) => {
+      const cartItem = cart.find((item) => item.id === product.id);
       if (cartItem) {
         return { ...product, stock: Math.max(0, product.stock - cartItem.qty) };
       }
@@ -204,7 +352,7 @@ export default function App() {
       date: new Date().toISOString(),
       customerName: customerName.trim() || 'Umum',
       customerPhone: customerPhone.trim(),
-      items: cart.map(item => ({ ...item })),
+      items: cart.map((item) => ({ ...item })),
       subtotal: totals.subtotal,
       discount: totals.discount,
       taxPercent: totals.taxPercent,
@@ -212,7 +360,7 @@ export default function App() {
       total: totals.total,
       paid: totals.paid,
       change: totals.change,
-      paymentMethod: paymentMethod
+      paymentMethod: paymentMethod,
     };
 
     const updatedTransactions = [newTransaction, ...transactions];
@@ -220,7 +368,7 @@ export default function App() {
     setProducts(updatedProducts);
     setTransactions(updatedTransactions);
     setLatestReceipt(newTransaction);
-    
+
     // Clear cart & variables
     setCart([]);
     setCustomerName('');
@@ -237,19 +385,19 @@ export default function App() {
   const handleCancelTransaction = (transactionId) => {
     if (!window.confirm('Batalkan pesanan ini? Stok barang akan otomatis dikembalikan ke inventori.')) return;
 
-    const transactionToCancel = transactions.find(t => t.id === transactionId);
+    const transactionToCancel = transactions.find((t) => t.id === transactionId);
     if (!transactionToCancel) return;
 
     // Restore stock
-    const updatedProducts = products.map(product => {
-      const refundItem = transactionToCancel.items.find(item => item.id === product.id);
+    const updatedProducts = products.map((product) => {
+      const refundItem = transactionToCancel.items.find((item) => item.id === product.id);
       if (refundItem) {
         return { ...product, stock: product.stock + refundItem.qty };
       }
       return product;
     });
 
-    const updatedTransactions = transactions.filter(t => t.id !== transactionId);
+    const updatedTransactions = transactions.filter((t) => t.id !== transactionId);
 
     setProducts(updatedProducts);
     setTransactions(updatedTransactions);
@@ -261,7 +409,7 @@ export default function App() {
 
   // Repay Kasbon
   const handleRepayKasbon = (transactionId, method) => {
-    const updatedTransactions = transactions.map(t => {
+    const updatedTransactions = transactions.map((t) => {
       if (t.id === transactionId) {
         return { ...t, paid: t.total, kasbonPaidMethod: method };
       }
@@ -276,7 +424,7 @@ export default function App() {
   // Stock mutation updates
   const handleAddStock = (productId, qty, note) => {
     const quantity = numberOnly(qty);
-    const updatedProducts = products.map(p => {
+    const updatedProducts = products.map((p) => {
       if (p.id === productId) {
         return { ...p, stock: p.stock + quantity };
       }
@@ -287,9 +435,9 @@ export default function App() {
       id: uid('stk'),
       date: new Date().toISOString(),
       productId,
-      productName: products.find(p => p.id === productId)?.name || '',
+      productName: products.find((p) => p.id === productId)?.name || '',
       quantity,
-      note: note || 'Tambah stok manual'
+      note: note || 'Tambah stok manual',
     };
     const updatedMovements = [newMovement, ...movements];
 
@@ -303,13 +451,13 @@ export default function App() {
   // Expired stock updates
   const handleExpiredStock = (productId, qty, note) => {
     const quantity = numberOnly(qty);
-    const product = products.find(p => p.id === productId);
+    const product = products.find((p) => p.id === productId);
     if (!product) return;
 
     const costPerUnit = numberOnly(product.costPrice || product.price);
     const totalLoss = costPerUnit * quantity;
 
-    const updatedProducts = products.map(p => {
+    const updatedProducts = products.map((p) => {
       if (p.id === productId) {
         return { ...p, stock: Math.max(0, p.stock - quantity) };
       }
@@ -325,7 +473,7 @@ export default function App() {
       quantity,
       costPerUnit,
       totalLoss,
-      note: note || 'Barang expired/dibuang'
+      note: note || 'Barang expired/dibuang',
     };
     const updatedMovements = [newMovement, ...movements];
 
@@ -333,16 +481,19 @@ export default function App() {
     setMovements(updatedMovements);
 
     saveAll(updatedProducts, null, updatedMovements, null);
-    showToast(`${quantity} ${product.unit} ${product.name} dibuang. Kerugian ${rupiah(totalLoss)} tercatat.`, 'warning');
+    showToast(
+      `${quantity} ${product.unit} ${product.name} dibuang. Kerugian ${rupiah(totalLoss)} tercatat.`,
+      'warning'
+    );
   };
 
   // Quick stock mutation directly from table
   const handleQuickStock = (productId, qty) => {
     const quantity = Number(qty);
-    const product = products.find(p => p.id === productId);
+    const product = products.find((p) => p.id === productId);
     if (!product || quantity <= 0) return;
 
-    const updatedProducts = products.map(p => {
+    const updatedProducts = products.map((p) => {
       if (p.id === productId) {
         return { ...p, stock: p.stock + quantity };
       }
@@ -355,7 +506,7 @@ export default function App() {
       productId,
       productName: product.name,
       quantity,
-      note: 'Tambah cepat dari tabel inventori'
+      note: 'Tambah cepat dari tabel inventori',
     };
     const updatedMovements = [newMovement, ...movements];
 
@@ -368,17 +519,17 @@ export default function App() {
 
   // Delete product
   const handleDeleteProduct = (productId) => {
-    const product = products.find(p => p.id === productId);
+    const product = products.find((p) => p.id === productId);
     if (!product) return;
 
-    const inCart = cart.some(item => item.id === productId);
+    const inCart = cart.some((item) => item.id === productId);
     if (inCart) {
       showToast('Barang masih ada di keranjang. Hapus dari keranjang dulu.', 'error');
       return;
     }
 
     if (window.confirm(`Hapus ${product.name} dari inventori?`)) {
-      const updatedProducts = products.filter(p => p.id !== productId);
+      const updatedProducts = products.filter((p) => p.id !== productId);
       setProducts(updatedProducts);
       saveAll(updatedProducts, null, null, null);
       showToast('Barang dihapus dari inventori.');
@@ -387,7 +538,7 @@ export default function App() {
 
   // Add/Edit product
   const handleSaveProduct = (productData, editingId) => {
-    const skuExists = products.some(p => p.sku.toLowerCase() === productData.sku.toLowerCase() && p.id !== editingId);
+    const skuExists = products.some((p) => p.sku.toLowerCase() === productData.sku.toLowerCase() && p.id !== editingId);
     if (skuExists) {
       showToast('SKU sudah dipakai barang lain.', 'error');
       return false;
@@ -395,34 +546,40 @@ export default function App() {
 
     let updatedProducts;
     if (editingId) {
-      updatedProducts = products.map(p => {
+      updatedProducts = products.map((p) => {
         if (p.id === editingId) {
           return {
             ...p,
             ...productData,
-            photo: productData.photo || p.photo || ''
+            photo: productData.photo || p.photo || '',
           };
         }
         return p;
       });
       // Sync items in cart
-      setCart(cart.map(item => item.id === editingId ? { 
-        ...item, 
-        name: productData.name, 
-        sku: productData.sku, 
-        price: productData.price, 
-        costPrice: productData.costPrice, 
-        profit: productData.profit 
-      } : item));
-      
+      setCart(
+        cart.map((item) =>
+          item.id === editingId
+            ? {
+                ...item,
+                name: productData.name,
+                sku: productData.sku,
+                price: productData.price,
+                costPrice: productData.costPrice,
+                profit: productData.profit,
+              }
+            : item
+        )
+      );
+
       showToast('Data barang diperbarui.');
     } else {
       updatedProducts = [
         ...products,
         {
           id: uid('prd'),
-          ...productData
-        }
+          ...productData,
+        },
       ];
       showToast('Barang baru ditambahkan.');
     }
@@ -433,11 +590,12 @@ export default function App() {
   };
 
   // Settings Save
-  const handleSaveSettings = (taxPercent, qrisImage) => {
+  const handleSaveSettings = (taxPercent, qrisImage, qrisString) => {
     const updatedSettings = {
       ...settings,
       taxPercent,
-      qrisImage
+      qrisImage,
+      qrisString: qrisString !== undefined ? qrisString : settings.qrisString || '',
     };
     setSettings(updatedSettings);
     saveAll(null, null, null, updatedSettings);
@@ -450,7 +608,7 @@ export default function App() {
       ...settings,
       storeName: storeName || 'Kasir Toko',
       storeAddress,
-      storePhoto
+      storePhoto,
     };
     setSettings(updatedSettings);
     saveAll(null, null, null, updatedSettings);
@@ -459,10 +617,10 @@ export default function App() {
 
   // Remove photo settings
   const handleRemoveQris = () => {
-    const updatedSettings = { ...settings, qrisImage: '' };
+    const updatedSettings = { ...settings, qrisImage: '', qrisString: '' };
     setSettings(updatedSettings);
     saveAll(null, null, null, updatedSettings);
-    showToast('Gambar QRIS dihapus.');
+    showToast('Data QRIS dihapus.');
   };
 
   const handleRemoveStorePhoto = () => {
@@ -473,7 +631,7 @@ export default function App() {
   };
 
   const handleRemoveProductPhoto = (productId) => {
-    const updatedProducts = products.map(p => {
+    const updatedProducts = products.map((p) => {
       if (p.id === productId) {
         return { ...p, photo: '' };
       }
@@ -541,12 +699,23 @@ export default function App() {
       return;
     }
 
-    const headers = ['Kode Transaksi', 'Tanggal', 'Pelanggan', 'Item', 'Subtotal', 'Diskon', 'PPN', 'Total', 'Metode Pembayaran', 'Keuntungan Kotor'];
-    
-    const rows = transactions.map(t => {
+    const headers = [
+      'Kode Transaksi',
+      'Tanggal',
+      'Pelanggan',
+      'Item',
+      'Subtotal',
+      'Diskon',
+      'PPN',
+      'Total',
+      'Metode Pembayaran',
+      'Keuntungan Kotor',
+    ];
+
+    const rows = transactions.map((t) => {
       const date = new Date(t.date).toLocaleString('id-ID');
-      const items = t.items.map(i => `${i.name} (${i.qty})`).join('; ');
-      const trxProfit = t.items.reduce((sum, item) => sum + (numberOnly(item.profit || 0) * numberOnly(item.qty)), 0);
+      const items = t.items.map((i) => `${i.name} (${i.qty})`).join('; ');
+      const trxProfit = t.items.reduce((sum, item) => sum + numberOnly(item.profit || 0) * numberOnly(item.qty), 0);
       return [
         t.code,
         date,
@@ -556,14 +725,20 @@ export default function App() {
         t.discount,
         t.tax,
         t.total,
-        t.paymentMethod === 'Kasbon' ? (t.paid < t.total ? 'Kasbon (Belum Lunas)' : 'Kasbon (Sudah Lunas)') : t.paymentMethod,
-        trxProfit
-      ].map(value => `"${String(value).replace(/"/g, '""')}"`).join(',');
+        t.paymentMethod === 'Kasbon'
+          ? t.paid < t.total
+            ? 'Kasbon (Belum Lunas)'
+            : 'Kasbon (Sudah Lunas)'
+          : t.paymentMethod,
+        trxProfit,
+      ]
+        .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+        .join(',');
     });
 
     // Add expired loss rows
     const expiredMovements = (movements || []).filter((m) => m.type === 'expired');
-    const expiredRows = expiredMovements.map(m => {
+    const expiredRows = expiredMovements.map((m) => {
       const date = new Date(m.date).toLocaleString('id-ID');
       return [
         `EXP-${m.id}`,
@@ -575,19 +750,21 @@ export default function App() {
         0,
         0,
         'Expired/Buang',
-        -m.totalLoss
-      ].map(value => `"${String(value).replace(/"/g, '""')}"`).join(',');
+        -m.totalLoss,
+      ]
+        .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+        .join(',');
     });
 
     const csvContent = '\uFEFF' + [headers.join(','), ...rows, ...expiredRows].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-    
+
     const link = document.createElement('a');
     link.setAttribute('href', url);
     link.setAttribute('download', `Laporan_Penjualan_${new Date().toISOString().slice(0, 10)}.csv`);
     link.style.visibility = 'hidden';
-    
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -605,27 +782,34 @@ export default function App() {
     );
   }
 
+  // Render Landing Page if path does not start with /kasir
+  if (!currentPath.startsWith('/kasir')) {
+    return <LandingPage navigate={navigate} />;
+  }
+
   // Render Auth component if token is absent
   if (!token) {
     return (
-      <Auth 
-        authMode={authMode} 
-        setAuthMode={setAuthMode} 
-        onAuthSuccess={handleAuthSuccess} 
-        showToast={showToast} 
-      />
+      <>
+        <Auth
+          authMode={authMode}
+          setAuthMode={setAuthMode}
+          onAuthSuccess={handleAuthSuccess}
+          showToast={showToast}
+          navigate={navigate}
+        />
+        {renderToast()}
+      </>
     );
   }
 
   // Render Super Admin dashboard if user is super admin
   if (user && user.role === 'admin') {
     return (
-      <Admin 
-        adminUsers={adminUsers} 
-        token={token} 
-        onLogout={handleLogout} 
-        showToast={showToast} 
-      />
+      <>
+        <Admin adminUsers={adminUsers} token={token} onLogout={handleLogout} showToast={showToast} />
+        {renderToast()}
+      </>
     );
   }
 
@@ -646,7 +830,9 @@ export default function App() {
               <div key={idx} className="flex justify-between items-start py-0.5">
                 <div className="pr-2">
                   <div>{item.name}</div>
-                  <div className="text-[9px] text-gray-500">{item.qty} x {rupiah(item.price)}</div>
+                  <div className="text-[9px] text-gray-500">
+                    {item.qty} x {rupiah(item.price)}
+                  </div>
                 </div>
                 <div className="font-semibold text-right shrink-0">{rupiah(item.price * item.qty)}</div>
               </div>
@@ -699,14 +885,13 @@ export default function App() {
         {/* Navigation Header */}
         <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-200 shadow-sm px-4 py-3">
           <div className="max-w-[1480px] mx-auto flex items-center justify-between gap-4">
-            
             {/* Store details */}
             <div className="flex items-center gap-3">
               {settings.storePhoto ? (
-                <img 
-                  src={settings.storePhoto} 
-                  alt="Logo" 
-                  className="w-10 h-10 object-contain rounded-lg border bg-white shadow-sm shrink-0" 
+                <img
+                  src={settings.storePhoto}
+                  alt="Logo"
+                  className="w-10 h-10 object-contain rounded-lg border bg-white shadow-sm shrink-0"
                 />
               ) : (
                 <div className="w-10 h-10 text-white bg-gradient-to-br from-primary-600 to-primary-800 rounded-lg p-2.5 shadow-md flex items-center justify-center font-bold uppercase shrink-0">
@@ -724,7 +909,10 @@ export default function App() {
             {/* Navigation Tabs */}
             <nav className="flex items-center gap-1.5">
               <button
-                onClick={() => { setActiveView('cashier'); setLatestReceipt(null); }}
+                onClick={() => {
+                  setActiveView('cashier');
+                  setLatestReceipt(null);
+                }}
                 className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-lg transition-all active:scale-95 ${
                   activeView === 'cashier'
                     ? 'bg-primary-50 text-primary-700'
@@ -735,7 +923,10 @@ export default function App() {
                 <span className="hidden sm:inline">Kasir POS</span>
               </button>
               <button
-                onClick={() => { setActiveView('dashboard'); setLatestReceipt(null); }}
+                onClick={() => {
+                  setActiveView('dashboard');
+                  setLatestReceipt(null);
+                }}
                 className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-lg transition-all active:scale-95 ${
                   activeView === 'dashboard'
                     ? 'bg-primary-50 text-primary-700'
@@ -746,7 +937,10 @@ export default function App() {
                 <span className="hidden sm:inline">Dashboard Stok</span>
               </button>
               <button
-                onClick={() => { setActiveView('history'); setLatestReceipt(null); }}
+                onClick={() => {
+                  setActiveView('history');
+                  setLatestReceipt(null);
+                }}
                 className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-lg transition-all active:scale-95 ${
                   activeView === 'history'
                     ? 'bg-primary-50 text-primary-700'
@@ -795,7 +989,6 @@ export default function App() {
               showToast={showToast}
               rupiah={rupiah}
               numberOnly={numberOnly}
-              uid={uid}
             />
           )}
 
@@ -831,7 +1024,6 @@ export default function App() {
               onCancelTransaction={handleCancelTransaction}
               onRepayKasbon={handleRepayKasbon}
               onExportCsv={handleExportCsv}
-              showToast={showToast}
               rupiah={rupiah}
               numberOnly={numberOnly}
             />
@@ -840,20 +1032,7 @@ export default function App() {
       </div>
 
       {/* Floating Toast Notification */}
-      {toast && (
-        <div className="fixed bottom-5 right-5 z-50 animate-in slide-in-from-bottom duration-200">
-          <div className={`px-4 py-3 rounded-xl shadow-lg border flex items-center gap-2.5 font-semibold text-xs text-white ${
-            toast.type === 'error'
-              ? 'bg-red-600 border-red-700'
-              : toast.type === 'warning'
-              ? 'bg-orange-500 border-orange-600'
-              : 'bg-primary-600 border-primary-750'
-          }`}>
-            <AlertCircle className="w-4.5 h-4.5" />
-            <span>{toast.message}</span>
-          </div>
-        </div>
-      )}
+      {renderToast()}
     </div>
   );
 }
