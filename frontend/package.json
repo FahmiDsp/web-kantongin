@@ -1,21 +1,15 @@
 {
-  "name": "kantongin",
+  "name": "kantongin-frontend",
   "version": "1.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "node api/index.js",
     "lint": "eslint \"src/**/*.{js,jsx}\"",
     "format": "prettier --write \"src/**/*.{js,jsx,css,html}\""
   },
   "dependencies": {
-    "cors": "^2.8.6",
-    "express": "^5.2.1",
-    "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.395.0",
-    "mongodb": "^7.2.0",
-    "nodemailer": "^8.0.7",
     "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
