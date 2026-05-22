@@ -11,7 +11,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;750;800&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="/src/kasir/index.css" />
   
   <style>
     .reveal {
@@ -24,6 +23,7 @@
       transform: translateY(0);
     }
   </style>
+  <link rel="stylesheet" crossorigin href="/assets/index-CylKWJJA.css">
 </head>
 <body class="bg-slate-50 text-slate-900 antialiased selection:bg-primary-600 selection:text-white font-sans overflow-x-hidden">
 
@@ -72,7 +72,7 @@
 
   <!-- ===== HERO ===== -->
   <section class="pt-32 pb-20 md:pt-40 md:pb-28 relative overflow-hidden" id="hero">
-    <!-- Ambient gradient backdrops -->
+    {/* Ambient gradient backdrops */}
     <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-primary-100/50 to-emerald-100/20 rounded-full blur-3xl -z-10 translate-x-1/3 -translate-y-1/3"></div>
     <div class="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-accent-100/30 to-orange-100/10 rounded-full blur-3xl -z-10 -translate-x-1/4 translate-y-1/4"></div>
 
@@ -95,7 +95,7 @@
       </div>
 
       <div class="lg:col-span-5 relative flex justify-center">
-        <!-- Animated Card Mockup -->
+        {/* Animated Card Mockup */}
         <div class="w-full max-w-md bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xl relative">
           <div class="flex items-center gap-1.5 pb-4 border-b border-slate-100 mb-4">
             <span class="w-3 h-3 bg-red-400 rounded-full"></span>
@@ -109,7 +109,7 @@
             <div class="h-4 bg-slate-100 rounded-full w-full"></div>
             <div class="h-4 bg-slate-100 rounded-full w-1/2"></div>
             
-            <!-- Chart Graphic Preview -->
+            {/* Chart Graphic Preview */}
             <div class="h-28 bg-slate-50 border border-slate-100 rounded-xl flex items-end justify-between p-4 pt-8">
               <span class="w-6 bg-primary-500 rounded-t-md h-[40%] animate-pulse"></span>
               <span class="w-6 bg-accent-500 rounded-t-md h-[75%] animate-pulse [animation-delay:0.2s]"></span>
@@ -118,7 +118,7 @@
             </div>
           </div>
 
-          <!-- Floating Indicators -->
+          {/* Floating Indicators */}
           <div class="absolute -top-6 -left-6 bg-white border border-slate-200/80 rounded-2xl p-3 shadow-lg flex items-center gap-3 animate-bounce [animation-duration:4s]">
             <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm">
               ✓
@@ -197,7 +197,7 @@
     <div class="max-w-6xl mx-auto px-6">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div class="reveal flex justify-center">
-          <!-- Custom Illustration block -->
+          {/* Custom Illustration block */}
           <div class="relative w-80 h-80 bg-gradient-to-br from-primary-50 to-primary-100/50 rounded-full border border-primary-200/50 flex items-center justify-center">
             <div class="w-48 h-48 bg-white border-2 border-slate-200 rounded-3xl p-4 shadow-xl flex flex-col items-center">
               <div class="w-full h-2 bg-slate-100 rounded-full mb-3"></div>
@@ -264,15 +264,11 @@
         <div class="space-y-4">
           <h4 class="text-sm font-bold text-slate-300">Teknologi Pendukung</h4>
           <div class="flex flex-wrap gap-2.5">
-            <span class="px-3 py-1.5 bg-slate-800 border border-slate-700 text-[10px] font-bold rounded-lg text-slate-400">React 18</span>
-            <span class="px-3 py-1.5 bg-slate-800 border border-slate-700 text-[10px] font-bold rounded-lg text-slate-400">Vite</span>
-            <span class="px-3 py-1.5 bg-slate-800 border border-slate-700 text-[10px] font-bold rounded-lg text-slate-400">Tailwind CSS</span>
-            <span class="px-3 py-1.5 bg-slate-800 border border-slate-700 text-[10px] font-bold rounded-lg text-slate-400">Express.js</span>
-            <span class="px-3 py-1.5 bg-slate-800 border border-slate-700 text-[10px] font-bold rounded-lg text-slate-400">MongoDB</span>
-            <span class="px-3 py-1.5 bg-slate-800 border border-slate-700 text-[10px] font-bold rounded-lg text-slate-400">JWT Auth</span>
-            <span class="px-3 py-1.5 bg-slate-800 border border-slate-700 text-[10px] font-bold rounded-lg text-slate-400">Nodemailer</span>
-            <span class="px-3 py-1.5 bg-slate-800 border border-slate-700 text-[10px] font-bold rounded-lg text-slate-400">Lucide Icons</span>
-            <span class="px-3 py-1.5 bg-slate-800 border border-slate-700 text-[10px] font-bold rounded-lg text-slate-400">Vercel</span>
+            {['React', 'Vite', 'Tailwind CSS', 'Node.js', 'MongoDB', 'Vercel'].map((tech) => (
+              <span key={tech} class="px-3 py-1 bg-slate-800 border border-slate-700 text-[10px] font-bold rounded-lg text-slate-350">
+                {tech}
+              </span>
+            ))}
           </div>
         </div>
       </div>
